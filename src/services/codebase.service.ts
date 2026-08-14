@@ -13,12 +13,12 @@ export class CodebaseService {
 
   constructor(private codebaseRepo: CodebaseRepository) {}
 
-  public indexDirectory(
+  public async indexDirectory(
     rootDir: string,
     projectId: string = 'default',
     ignorePatterns?: string[]
-  ): IndexingStats {
-    const { symbols, edges, stats } = this.indexer.indexDirectory(rootDir, projectId, ignorePatterns);
+  ): Promise<IndexingStats> {
+    const { symbols, edges, stats } = await this.indexer.indexDirectoryAsync(rootDir, projectId, ignorePatterns);
     this.codebaseRepo.saveSymbolsBatch(projectId, symbols, edges);
     return stats;
   }

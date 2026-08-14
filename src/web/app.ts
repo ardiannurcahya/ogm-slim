@@ -50,7 +50,7 @@ export function createWebServer(
     const body = await c.req.json().catch(() => ({}));
     const dirPath = body.path || '.';
     const projectId = body.project_id || config.auth.default_project_id;
-    const stats = codebaseService.indexDirectory(dirPath, projectId, body.ignore);
+    const stats = await codebaseService.indexDirectory(dirPath, projectId, body.ignore);
     return c.json(stats);
   });
 

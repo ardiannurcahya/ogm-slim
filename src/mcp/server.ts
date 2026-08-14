@@ -293,7 +293,7 @@ export function createMcpServer(
 
         case 'codebase_index': {
           const parsed = CodebaseIndexSchema.parse(args || {});
-          const stats = codebaseService.indexDirectory(parsed.path, projectId);
+          const stats = await codebaseService.indexDirectory(parsed.path, projectId);
           return {
             content: [{ type: 'text', text: JSON.stringify({ status: 'indexed', stats }, null, 2) }],
           };

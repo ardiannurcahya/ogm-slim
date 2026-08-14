@@ -14,17 +14,17 @@ export interface IndexingStats {
 export class CodebaseIndexer {
   private extractor = new AstExtractor();
 
-  public indexDirectory(
+  public async indexDirectoryAsync(
     rootDir: string,
     projectId: string = 'default',
     ignorePatterns: string[] = ['node_modules', '.git', 'dist', 'build', '.next', 'coverage']
-  ): { symbols: CodeSymbol[]; edges: GraphEdge[]; stats: IndexingStats } {
+  ): Promise<{ symbols: CodeSymbol[]; edges: GraphEdge[]; stats: IndexingStats }> {
     const startTime = Date.now();
     const files = this.walkFiles(rootDir, ignorePatterns);
 
     const extractedFiles: ExtractedFile[] = [];
     for (const f of files) {
-      const res = this.extractor.extractFile(f, rootDir, projectId);
+      const res = await this.extractor.extractFileAsync(f, rootDir, projectId);
       if (res && res.symbols.length > 0) {
         extractedFiles.push(res);
       }
@@ -96,7 +96,10 @@ export class CodebaseIndexer {
       if (item.isDirectory()) {
         results.push(...this.walkFiles(fullPath, ignorePatterns));
       } else if (item.isFile()) {
-        results.push(fullPath);
+        const ext = path.extname(item.name).toLowerCase();
+        if (['.ts', '.tsx', '.js', '.jsx', '.go', '.py', '.rs'].includes(ext)) {
+          results.push(fullPath);
+        }
       }
     }
 

@@ -53,8 +53,8 @@ describe('OGM-Slim Codebase AST & Graph Operations', () => {
     fs.rmSync(tempDir, { recursive: true, force: true });
   });
 
-  test('should index directory and resolve cross-file call graph', () => {
-    const stats = codebaseService.indexDirectory(tempDir, 'code-proj');
+  test('should index directory and resolve cross-file call graph', async () => {
+    const stats = await codebaseService.indexDirectory(tempDir, 'code-proj');
     assert.equal(stats.filesIndexed, 2);
     assert.ok(stats.symbolsCount >= 3);
     assert.ok(stats.edgesCount >= 2);
@@ -78,8 +78,8 @@ describe('OGM-Slim Codebase AST & Graph Operations', () => {
     assert.ok(impact.blast_radius_score > 0);
   });
 
-  test('should export full Sigma.js graph structure', () => {
-    codebaseService.indexDirectory(tempDir, 'code-proj');
+  test('should export full Sigma.js graph structure', async () => {
+    await codebaseService.indexDirectory(tempDir, 'code-proj');
     const graphData = codebaseService.getGraphData('code-proj');
     assert.ok(graphData.nodes.length >= 3);
     assert.ok(graphData.edges.length >= 2);

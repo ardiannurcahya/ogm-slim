@@ -47,7 +47,7 @@ program
     if (config.codebase.auto_index) {
       try {
         console.log(`[OGM-Slim] ⚡ Auto-indexing repository at ${process.cwd()}...`);
-        const stats = codebaseService.indexDirectory(process.cwd(), config.auth.default_project_id);
+        const stats = await codebaseService.indexDirectory(process.cwd(), config.auth.default_project_id);
         console.log(
           `[OGM-Slim] ✅ Indexed ${stats.filesIndexed} files, ${stats.symbolsCount} symbols, ${stats.edgesCount} relations in ${stats.durationMs}ms.`
         );
@@ -101,7 +101,7 @@ program
     const codebaseService = new CodebaseService(codebaseRepo);
 
     console.log(`[OGM-Slim] 🔍 Scanning and indexing ${dirPath}...`);
-    const stats = codebaseService.indexDirectory(dirPath, projectId);
+    const stats = await codebaseService.indexDirectory(dirPath, projectId);
     console.log(
       `[OGM-Slim] ✅ Done! Indexed ${stats.filesIndexed} files, ${stats.symbolsCount} symbols, ${stats.edgesCount} call edges in ${stats.durationMs}ms.`
     );
