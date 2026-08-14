@@ -102,12 +102,12 @@ async function main() {
 
   // Wait for network container & symbols list
   await page.waitForSelector('#networkContainer');
-  await page.waitForSelector('.sym-item');
+  await page.waitForSelector('.mac-sym-item');
 
   const title = await page.title();
   const nodeCountText = await page.$eval('#nodeCount', el => el.innerText);
   const edgeCountText = await page.$eval('#edgeCount', el => el.innerText);
-  const firstSymName = await page.$eval('.sym-item .sym-name', el => el.innerText);
+  const firstSymName = await page.$eval('.mac-sym-item .mac-sym-name', el => el.innerText);
 
   console.log(`Page Title: "${title}"`);
   console.log(`Reported Nodes: ${nodeCountText}, Edges: ${edgeCountText}`);
@@ -115,7 +115,7 @@ async function main() {
 
   // Click the first symbol item to test interactivity
   console.log('Clicking symbol in list to test Inspector...');
-  await page.click('.sym-item');
+  await page.click('.mac-sym-item');
 
   const insName = await page.$eval('#insName', el => el.innerText);
   const insSig = await page.$eval('#insSig', el => el.innerText);

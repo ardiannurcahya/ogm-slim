@@ -7,7 +7,7 @@ import { renderContractInspector } from '../components/inspector.component.js';
 import { renderClientScript } from '../client/graph-app.client.js';
 
 /**
- * Renders the full modular HTML document for the Codebase Knowledge Graph Explorer.
+ * Renders the authentic macOS styled Codebase Knowledge Graph Explorer.
  */
 export function renderGraphPage(projectId: string): string {
   return `<!doctype html>
@@ -15,7 +15,7 @@ export function renderGraphPage(projectId: string): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>OGM-Slim Codebase Knowledge Graph</title>
+  <title>OGM-Slim &mdash; Codebase Knowledge Graph</title>
   <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
   <style>
     ${themeCss}
@@ -24,7 +24,7 @@ export function renderGraphPage(projectId: string): string {
 <body>
   ${renderHeader()}
   ${renderToolbar(projectId)}
-  <div class="layout">
+  <div class="mac-layout">
     ${renderSymbolExplorer()}
     ${renderGraphCanvas()}
     ${renderContractInspector()}

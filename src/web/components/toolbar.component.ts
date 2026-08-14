@@ -1,14 +1,14 @@
 export function renderToolbar(projectId: string): string {
   return `
-  <div class="toolbar">
-    <div class="stats-bar">
-      <div>Project: <strong style="color:var(--text)" id="projId">${projectId}</strong></div>
-      <div>Nodes: <span class="stat-badge" id="nodeCount">-</span></div>
-      <div>Edges: <span class="stat-badge" id="edgeCount">-</span></div>
-      <div>Louvain Communities: <span class="stat-badge" id="commCount">-</span></div>
+  <div class="mac-toolbar">
+    <div class="mac-status-pills">
+      <div class="mac-pill">Project: <span class="mac-pill-val" id="projId">${projectId}</span></div>
+      <div class="mac-pill">Symbols: <span class="mac-pill-val" id="nodeCount">-</span></div>
+      <div class="mac-pill">Relations: <span class="mac-pill-val" id="edgeCount">-</span></div>
+      <div class="mac-pill">Louvain Clusters: <span class="mac-pill-val" id="commCount">-</span></div>
     </div>
-    <div class="controls">
-      <button onclick="triggerReindex()">⚡ Re-Index Codebase Now</button>
+    <div>
+      <button class="mac-btn mac-btn-primary" onclick="triggerReindex()">⚡ Re-Index Codebase</button>
     </div>
   </div>`;
 }
