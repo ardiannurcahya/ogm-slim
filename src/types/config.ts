@@ -1,4 +1,4 @@
-export interface OgmLwConfig {
+export interface OgmSlimConfig {
   server: {
     host: string;
     port: number;
@@ -21,3 +21,6 @@ export interface OgmLwConfig {
   };
   log_level: 'debug' | 'info' | 'warn' | 'error';
 }
+
+export type AppConfig = OgmSlimConfig;
+export type OgmLwConfig = OgmSlimConfig;

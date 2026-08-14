@@ -1,6 +1,16 @@
+import { GraphEdge } from './centrality.js';
+
+/**
+ * Computes community partitions using the Louvain Modularity Optimization method (Blondel et al. 2008).
+ * Symmetrizes directional code calls and maximizes network modularity Q.
+ *
+ * @param nodeKeys Array of symbol unique identifiers
+ * @param edges Array of directed/undirected graph edges
+ * @returns Map of nodeKey -> community_id (1-indexed, ordered by cluster size descending)
+ */
 export function computeLouvainCommunities(
   nodeKeys: string[],
-  edges: Array<{ source: string; target: string }>
+  edges: GraphEdge[]
 ): Map<string, number> {
   const n = nodeKeys.length;
   if (n === 0) return new Map();
@@ -9,11 +19,11 @@ export function computeLouvainCommunities(
   nodeKeys.forEach((k, i) => keyToIndex.set(k, i));
 
   // Build symmetric adjacency weights
-  const adj = Array.from({ length: n }, () => new Map<number, number>());
+  const adj: Map<number, number>[] = Array.from({ length: n }, () => new Map<number, number>());
   const degree = new Float64Array(n);
   let totalWeight2M = 0;
 
-  edges.forEach((e) => {
+  for (const e of edges) {
     const u = keyToIndex.get(e.source);
     const v = keyToIndex.get(e.target);
     if (u !== undefined && v !== undefined && u !== v) {
@@ -24,24 +34,24 @@ export function computeLouvainCommunities(
       degree[v] += 1;
       totalWeight2M += 2;
     }
-  });
-
-  if (totalWeight2M === 0) {
-    const res = new Map<string, number>();
-    nodeKeys.forEach((k, i) => res.set(k, i + 1));
-    return res;
   }
 
-  // Node to community mapping
-  let community = new Int32Array(n);
+  // Handle graph with no internal edges
+  if (totalWeight2M === 0) {
+    const fallback = new Map<string, number>();
+    nodeKeys.forEach((k, i) => fallback.set(k, i + 1));
+    return fallback;
+  }
+
+  // Phase 1: Local modularity optimization
+  const community = new Int32Array(n);
   for (let i = 0; i < n; i++) community[i] = i;
 
-  // Community total incident degrees (Sigma_tot)
   const communityTotDegree = new Float64Array(n);
   for (let i = 0; i < n; i++) communityTotDegree[i] = degree[i];
 
   let improved = true;
-  let maxPasses = 20;
+  let maxPasses = 25;
 
   while (improved && maxPasses-- > 0) {
     improved = false;
@@ -51,7 +61,7 @@ export function computeLouvainCommunities(
       const k_i = degree[i];
       if (k_i === 0) continue;
 
-      // Find neighbor communities and their weights
+      // Find neighbor communities and link weights
       const neighborComms = new Map<number, number>();
       for (const [neighbor, weight] of adj[i].entries()) {
         const comm = community[neighbor];
@@ -59,16 +69,15 @@ export function computeLouvainCommunities(
       }
 
       // Remove node i from its current community
-      const weightInCur = neighborComms.get(curComm) || 0;
       communityTotDegree[curComm] -= k_i;
 
-      // Evaluate best community to join
+      // Evaluate best community to join based on modularity gain
       let bestComm = curComm;
       let bestGain = 0;
 
       for (const [targetComm, weightToComm] of neighborComms.entries()) {
         const totDegree = communityTotDegree[targetComm];
-        // deltaQ = weightToComm - (totDegree * k_i) / totalWeight2M
+        // deltaQ = weightToComm - (totDegree * k_i) / (2m)
         const gain = weightToComm - (totDegree * k_i) / totalWeight2M;
         if (gain > bestGain) {
           bestGain = gain;
@@ -86,13 +95,16 @@ export function computeLouvainCommunities(
     }
   }
 
-  // Normalize community IDs to contiguous 1..K sorted by community size
+  // Normalize community IDs to contiguous 1..K sorted by community size descending
   const counts = new Map<number, number>();
   for (let i = 0; i < n; i++) {
     counts.set(community[i], (counts.get(community[i]) || 0) + 1);
   }
 
-  const sortedComms = Array.from(counts.keys()).sort((a, b) => (counts.get(b) || 0) - (counts.get(a) || 0));
+  const sortedComms = Array.from(counts.keys()).sort(
+    (a, b) => (counts.get(b) || 0) - (counts.get(a) || 0)
+  );
+
   const commRankMap = new Map<number, number>();
   sortedComms.forEach((c, idx) => commRankMap.set(c, idx + 1));
 
@@ -103,18 +115,3 @@ export function computeLouvainCommunities(
 
   return result;
 }
-
-// Test script
-const testKeys = ['A1', 'A2', 'A3', 'B1', 'B2', 'B3'];
-const testEdges = [
-  { source: 'A1', target: 'A2' },
-  { source: 'A2', target: 'A3' },
-  { source: 'A1', target: 'A3' },
-  { source: 'B1', target: 'B2' },
-  { source: 'B2', target: 'B3' },
-  { source: 'B1', target: 'B3' },
-  { source: 'A3', target: 'B1' }, // bridge
-];
-
-const res = computeLouvainCommunities(testKeys, testEdges);
-console.log('Louvain communities:', Array.from(res.entries()));

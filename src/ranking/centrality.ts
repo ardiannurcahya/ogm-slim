@@ -1,4 +1,6 @@
 import { CodeSymbol } from '../types/domain.js';
+import { computeLouvainCommunities } from './louvain.js';
+import { computePageRank } from './pagerank.js';
 
 export interface GraphEdge {
   source: string;
@@ -6,116 +8,11 @@ export interface GraphEdge {
 }
 
 /**
- * Louvain Modularity Optimization for community detection on code graphs.
- * Optimizes network modularity Q: clusters tightly coupled functions/classes.
+ * Computes full graph analytics on extracted code symbols:
+ * 1. In/Out Degree Centrality
+ * 2. PageRank Symbol Importance
+ * 3. Louvain Modularity Community Detection
  */
-export function computeLouvainCommunities(
-  nodeKeys: string[],
-  edges: GraphEdge[]
-): Map<string, number> {
-  const n = nodeKeys.length;
-  if (n === 0) return new Map();
-
-  const keyToIndex = new Map<string, number>();
-  nodeKeys.forEach((k, i) => keyToIndex.set(k, i));
-
-  // Symmetrized adjacency weights and degrees
-  const adj: Map<number, number>[] = Array.from({ length: n }, () => new Map<number, number>());
-  const degree = new Float64Array(n);
-  let totalWeight2M = 0;
-
-  edges.forEach((e) => {
-    const u = keyToIndex.get(e.source);
-    const v = keyToIndex.get(e.target);
-    if (u !== undefined && v !== undefined && u !== v) {
-      const curW = adj[u].get(v) || 0;
-      adj[u].set(v, curW + 1);
-      adj[v].set(u, curW + 1);
-      degree[u] += 1;
-      degree[v] += 1;
-      totalWeight2M += 2;
-    }
-  });
-
-  // Isolated graph fallback
-  if (totalWeight2M === 0) {
-    const res = new Map<string, number>();
-    nodeKeys.forEach((k, i) => res.set(k, i + 1));
-    return res;
-  }
-
-  // Phase 1: Local modularity optimization
-  const community = new Int32Array(n);
-  for (let i = 0; i < n; i++) community[i] = i;
-
-  const communityTotDegree = new Float64Array(n);
-  for (let i = 0; i < n; i++) communityTotDegree[i] = degree[i];
-
-  let improved = true;
-  let maxPasses = 25;
-
-  while (improved && maxPasses-- > 0) {
-    improved = false;
-
-    for (let i = 0; i < n; i++) {
-      const curComm = community[i];
-      const k_i = degree[i];
-      if (k_i === 0) continue;
-
-      // Find neighbor communities and link weights
-      const neighborComms = new Map<number, number>();
-      for (const [neighbor, weight] of adj[i].entries()) {
-        const comm = community[neighbor];
-        neighborComms.set(comm, (neighborComms.get(comm) || 0) + weight);
-      }
-
-      // Remove node i from its current community
-      communityTotDegree[curComm] -= k_i;
-
-      // Evaluate best community to join based on modularity gain
-      let bestComm = curComm;
-      let bestGain = 0;
-
-      for (const [targetComm, weightToComm] of neighborComms.entries()) {
-        const totDegree = communityTotDegree[targetComm];
-        // deltaQ = weightToComm - (totDegree * k_i) / (2m)
-        const gain = weightToComm - (totDegree * k_i) / totalWeight2M;
-        if (gain > bestGain) {
-          bestGain = gain;
-          bestComm = targetComm;
-        }
-      }
-
-      // Put node into best community
-      community[i] = bestComm;
-      communityTotDegree[bestComm] += k_i;
-
-      if (bestComm !== curComm) {
-        improved = true;
-      }
-    }
-  }
-
-  // Normalize community IDs to contiguous 1..K sorted by community size
-  const counts = new Map<number, number>();
-  for (let i = 0; i < n; i++) {
-    counts.set(community[i], (counts.get(community[i]) || 0) + 1);
-  }
-
-  const sortedComms = Array.from(counts.keys()).sort(
-    (a, b) => (counts.get(b) || 0) - (counts.get(a) || 0)
-  );
-  const commRankMap = new Map<number, number>();
-  sortedComms.forEach((c, idx) => commRankMap.set(c, idx + 1));
-
-  const result = new Map<string, number>();
-  for (let i = 0; i < n; i++) {
-    result.set(nodeKeys[i], commRankMap.get(community[i]) || 1);
-  }
-
-  return result;
-}
-
 export function computeGraphAnalytics(
   symbols: CodeSymbol[],
   edges: GraphEdge[]
@@ -149,38 +46,19 @@ export function computeGraphAnalytics(
     s.degree = deg;
   });
 
-  // 2. PageRank (20 iterations)
-  const d = 0.85;
-  let pr = new Map<string, number>();
-  symbols.forEach((s) => pr.set(s.key, 1.0 / nodeCount));
-
-  for (let it = 0; it < 20; it++) {
-    const nextPr = new Map<string, number>();
-    symbols.forEach((s) => nextPr.set(s.key, (1 - d) / nodeCount));
-
-    symbols.forEach((s) => {
-      const neighbors = adj.get(s.key) || [];
-      const rank = pr.get(s.key) || 0;
-      if (neighbors.length > 0) {
-        const share = (rank * d) / neighbors.length;
-        neighbors.forEach((targetKey) => {
-          nextPr.set(targetKey, (nextPr.get(targetKey) || 0) + share);
-        });
-      }
-    });
-
-    pr = nextPr;
-  }
-
+  // 2. Compute PageRank
+  const nodeKeys = symbols.map((s) => s.key);
+  const prMap = computePageRank(nodeKeys, adj);
   symbols.forEach((s) => {
-    s.pagerank = parseFloat((pr.get(s.key) || 0).toFixed(6));
+    s.pagerank = prMap.get(s.key) || 0;
   });
 
-  // 3. Louvain Community Detection (Modularity Optimization)
-  const nodeKeys = symbols.map((s) => s.key);
+  // 3. Compute Louvain Modularity Communities
   const louvainMap = computeLouvainCommunities(nodeKeys, edges);
-
   symbols.forEach((s) => {
     s.community_id = louvainMap.get(s.key) || 1;
   });
 }
+
+export { computeLouvainCommunities } from './louvain.js';
+export { computePageRank } from './pagerank.js';
