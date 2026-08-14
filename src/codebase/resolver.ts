@@ -34,7 +34,7 @@ export class CodebaseIndexer {
       }
     }
 
-    // Build Global Symbol Resolution Table
+    // Build Global Symbol Resolution Table (by Name and by Key)
     const symbolMapByName = new Map<string, CodeSymbol[]>();
     const allSymbols: CodeSymbol[] = [];
 
@@ -49,18 +49,28 @@ export class CodebaseIndexer {
       }
     }
 
-    // Resolve Cross-File Edges
+    // Resolve Cross-File & Intra-File Edges
     const edges: GraphEdge[] = [];
     const edgeSet = new Set<string>();
 
     for (const ef of extractedFiles) {
+      const currentDir = path.dirname(ef.relativePath).replace(/\\/g, '/');
+
       for (const call of ef.rawCalls) {
         const candidates = symbolMapByName.get(call.calleeToken);
         if (candidates && candidates.length > 0) {
+          // Hierarchy of candidate resolution:
+          // 1. Symbol defined in the same file
+          // 2. Symbol defined in the same directory / package
+          // 3. Symbol defined in a direct child or parent directory
+          // 4. Global match
           const target =
-            candidates.find((c) => c.package_name === path.dirname(ef.relativePath)) || candidates[0];
+            candidates.find((c) => c.file_path === ef.relativePath && c.key !== call.callerKey) ||
+            candidates.find((c) => c.package_name === currentDir && c.key !== call.callerKey) ||
+            candidates.find((c) => c.package_name.startsWith(currentDir) || currentDir.startsWith(c.package_name)) ||
+            candidates[0];
 
-          if (target.key !== call.callerKey) {
+          if (target && target.key !== call.callerKey) {
             const edgeKey = `${call.callerKey}->${target.key}`;
             if (!edgeSet.has(edgeKey)) {
               edgeSet.add(edgeKey);
