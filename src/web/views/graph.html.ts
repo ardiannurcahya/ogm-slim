@@ -476,16 +476,30 @@ export function renderGraphHtml(projectId: string): string {
       document.getElementById('edgeCount').innerText = raw.edges.length;
       document.getElementById('symFilteredCount').innerText = raw.nodes.length;
 
+      const nodeDataMap = new Map();
+      raw.nodes.forEach(n => nodeDataMap.set(n.key, n));
+
       // Populate left symbol list
       const symListContainer = document.getElementById('symbolList');
       if (raw.nodes.length > 0) {
         symListContainer.innerHTML = raw.nodes.map(n => \`
-          <div class="sym-item" data-name="\${n.label}" data-kind="\${n.kind}" data-file="\${n.file}" onclick="selectSymbol('\${n.label}', '\${n.kind}', '\${n.file}', '\${n.signature.replace(/'/g, "\\\\'")}', '\${(n.doc||'').replace(/'/g, "\\\\'")}', \${JSON.stringify(n.calls||[])})">
+          <div class="sym-item" data-key="\${n.key}" data-name="\${n.label}" data-kind="\${n.kind}" data-file="\${n.file}">
             <span class="sym-kind kind-\${n.kind}">\${n.kind}</span>
             <span class="sym-name">\${n.label}</span>
             <div class="sym-file">\${n.file}</div>
           </div>
         \`).join('');
+
+        symListContainer.querySelectorAll('.sym-item').forEach(el => {
+          el.addEventListener('click', () => {
+            const key = el.getAttribute('data-key');
+            const data = nodeDataMap.get(key);
+            if (data) {
+              selectSymbol(data.label, data.kind, data.file, data.signature, data.doc, data.calls);
+              if (window.jumpToNode) window.jumpToNode(data.label);
+            }
+          });
+        });
       } else {
         symListContainer.innerHTML = '<p style="color:var(--muted);padding:1rem">No symbols indexed yet. Click "Re-Index Codebase Now".</p>';
       }
