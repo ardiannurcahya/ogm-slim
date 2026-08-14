@@ -100,8 +100,8 @@ async function main() {
   console.log('=== [3/4] Navigating to OGM-Slim Admin Graph Page ===');
   await page.goto('http://127.0.0.1:8080/admin', { waitUntil: 'networkidle0', timeout: 15000 });
 
-  // Wait for Sigma container & symbols list
-  await page.waitForSelector('#sigmaContainer');
+  // Wait for network container & symbols list
+  await page.waitForSelector('#networkContainer');
   await page.waitForSelector('.sym-item');
 
   const title = await page.title();

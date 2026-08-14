@@ -5,19 +5,20 @@ export function renderGraphHtml(projectId: string): string {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>OGM-Slim Codebase Knowledge Graph</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
   <style>
     :root {
       color-scheme: dark;
-      --bg: #090d16;
-      --panel: #0f172a;
-      --panel-hover: #1e293b;
+      --bg: #070b14;
+      --panel: #0d1527;
+      --panel-hover: #17233f;
       --panel-active: #1e3a5f;
-      --border: #1e293b;
+      --border: #1a2744;
       --border-focus: #38bdf8;
       --text: #f8fafc;
-      --muted: #94a3b8;
+      --muted: #8493a8;
       --accent: #38bdf8;
-      --accent-glow: rgba(56, 189, 248, 0.2);
+      --accent-glow: rgba(56, 189, 248, 0.25);
       --accent-bg: #0284c7;
       --fn: #22c55e;
       --method: #38bdf8;
@@ -38,7 +39,7 @@ export function renderGraphHtml(projectId: string): string {
       flex-direction: column;
     }
     header {
-      background: #060911;
+      background: #050810;
       border-bottom: 1px solid var(--border);
       padding: 0.6rem 1.2rem;
       display: flex;
@@ -63,13 +64,13 @@ export function renderGraphHtml(projectId: string): string {
       font-weight: 500;
       padding: 0.35rem 0.75rem;
       border-radius: 0.375rem;
-      background: #111827;
+      background: #111b2e;
       border: 1px solid var(--border);
       transition: all 0.15s ease;
     }
     header nav a:hover { background: var(--panel-hover); border-color: var(--accent); }
     .toolbar {
-      background: #0b1120;
+      background: #09101d;
       border-bottom: 1px solid var(--border);
       padding: 0.5rem 1.2rem;
       display: flex;
@@ -89,7 +90,7 @@ export function renderGraphHtml(projectId: string): string {
     .stat-badge { color: var(--accent); font-weight: 700; }
     .controls { display: flex; gap: 0.5rem; align-items: center; }
     input, select, button {
-      background: #111827;
+      background: #0d1527;
       color: var(--text);
       border: 1px solid var(--border);
       padding: 0.4rem 0.7rem;
@@ -120,13 +121,13 @@ export function renderGraphHtml(projectId: string): string {
       flex-direction: column;
       height: 100%;
       overflow: hidden;
-      background: #080d1a;
+      background: #070b14;
     }
     .col:last-child { border-right: none; }
     .col-header {
       padding: 0.75rem 1rem;
       border-bottom: 1px solid var(--border);
-      background: #0b1120;
+      background: #09101d;
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
@@ -153,13 +154,13 @@ export function renderGraphHtml(projectId: string): string {
     .sym-item {
       padding: 0.5rem 0.75rem;
       border-radius: 0.375rem;
-      background: #0f172a;
-      border: 1px solid #1e293b;
+      background: #0d1527;
+      border: 1px solid var(--border);
       cursor: pointer;
       transition: all 0.15s;
     }
     .sym-item:hover { background: var(--panel-hover); border-color: var(--accent); }
-    .sym-item.active { background: var(--panel-active); border-color: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+    .sym-item.active { background: var(--panel-active); border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
     .sym-kind {
       font-size: 0.65rem;
       text-transform: uppercase;
@@ -180,15 +181,19 @@ export function renderGraphHtml(projectId: string): string {
     .sym-file { font-size: 0.72rem; color: var(--muted); margin-top: 0.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .graph-view {
       position: relative;
-      background: radial-gradient(circle at 50% 50%, #0d1527 0%, #060911 100%);
+      background: radial-gradient(circle at 50% 50%, #0d1629 0%, #050811 100%);
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
-    #sigmaContainer {
-      flex: 1;
+    #networkContainer {
       width: 100%;
       height: 100%;
-      position: relative;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
     }
     .graph-toolbar {
       position: absolute;
@@ -197,23 +202,23 @@ export function renderGraphHtml(projectId: string): string {
       z-index: 10;
       display: flex;
       gap: 0.4rem;
-      background: rgba(15, 23, 42, 0.85);
+      background: rgba(13, 21, 39, 0.85);
       backdrop-filter: blur(8px);
       padding: 0.35rem 0.5rem;
       border-radius: 0.5rem;
       border: 1px solid var(--border);
     }
     .graph-btn {
-      background: #1e293b;
+      background: #17233f;
       color: var(--text);
       padding: 0.35rem 0.65rem;
       border-radius: 0.3rem;
       font-size: 0.8rem;
       cursor: pointer;
-      border: 1px solid #334155;
+      border: 1px solid #24355a;
       transition: all 0.15s;
     }
-    .graph-btn:hover { background: #334155; border-color: var(--accent); }
+    .graph-btn:hover { background: #24355a; border-color: var(--accent); }
     .graph-legend {
       position: absolute;
       bottom: 1rem;
@@ -221,7 +226,7 @@ export function renderGraphHtml(projectId: string): string {
       z-index: 10;
       display: flex;
       gap: 0.6rem;
-      background: rgba(15, 23, 42, 0.85);
+      background: rgba(13, 21, 39, 0.85);
       backdrop-filter: blur(8px);
       padding: 0.4rem 0.8rem;
       border-radius: 0.5rem;
@@ -245,19 +250,19 @@ export function renderGraphHtml(projectId: string): string {
       gap: 1rem;
     }
     .code-block {
-      background: #060911;
+      background: #050810;
       padding: 0.75rem;
       border-radius: 0.375rem;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 0.82rem;
       overflow-x: auto;
-      border: 1px solid #1e293b;
+      border: 1px solid var(--border);
       white-space: pre-wrap;
       color: #38bdf8;
       line-height: 1.45;
     }
     .doc-box {
-      background: #0f172a;
+      background: #0d1527;
       padding: 0.75rem;
       border-left: 3px solid var(--accent);
       border-radius: 0.25rem;
@@ -269,8 +274,8 @@ export function renderGraphHtml(projectId: string): string {
       display: inline-flex;
       align-items: center;
       gap: 0.3rem;
-      background: #0f172a;
-      border: 1px solid #334155;
+      background: #0d1527;
+      border: 1px solid #24355a;
       padding: 0.25rem 0.5rem;
       border-radius: 0.3rem;
       font-family: ui-monospace, monospace;
@@ -282,7 +287,7 @@ export function renderGraphHtml(projectId: string): string {
     .node-chip:hover { border-color: var(--accent); background: var(--panel-hover); color: var(--accent); }
     @media (max-width: 64rem) {
       .layout { grid-template-columns: 1fr; height: auto; }
-      #sigmaContainer { min-height: 50vh; }
+      #networkContainer { min-height: 50vh; position: relative; }
     }
   </style>
 </head>
@@ -330,15 +335,15 @@ export function renderGraphHtml(projectId: string): string {
       </div>
     </div>
 
-    <!-- Center Column: Sigma.js Canvas -->
+    <!-- Center Column: Graph Canvas -->
     <div class="col graph-view">
       <div class="graph-toolbar">
         <button class="graph-btn" id="btnZoomIn" title="Zoom In">+</button>
         <button class="graph-btn" id="btnZoomOut" title="Zoom Out">-</button>
-        <button class="graph-btn" id="btnReset" title="Reset Camera">Fit View</button>
-        <button class="graph-btn" id="btnLayout" title="Relayout">⚡ Relayout</button>
+        <button class="graph-btn" id="btnReset" title="Fit View">Fit View</button>
+        <button class="graph-btn" id="btnRelayout" title="Relayout">⚡ Relayout</button>
       </div>
-      <div id="sigmaContainer"></div>
+      <div id="networkContainer"></div>
       <div class="graph-legend">
         <span><span class="legend-dot" style="background:var(--fn)"></span>Function</span>
         <span><span class="legend-dot" style="background:var(--method)"></span>Method</span>
@@ -377,7 +382,11 @@ export function renderGraphHtml(projectId: string): string {
   </div>
 
   <script>
-    let globalSymbols = [];
+    let networkInstance = null;
+    let nodeDataSet = null;
+    let edgeDataSet = null;
+    const nodeDataMap = new Map();
+
     async function triggerReindex() {
       const btn = event.target;
       btn.innerText = '⏳ Indexing...';
@@ -431,22 +440,34 @@ export function renderGraphHtml(projectId: string): string {
       document.getElementById('insDoc').innerText = doc || 'No docstring comment provided.';
       const callList = Array.isArray(calls) ? calls : (calls ? calls.split(',').filter(Boolean) : []);
       if (callList.length > 0) {
-        document.getElementById('insCalls').innerHTML = callList.map(c => '<span class="node-chip" onclick="if(window.jumpToNode)window.jumpToNode(\\'' + c + '\\')">' + c + '</span>').join(' ');
+        document.getElementById('insCalls').innerHTML = callList.map(c => '<span class="node-chip" onclick="jumpToNode(\\'' + c + '\\')">' + c + '</span>').join(' ');
       } else {
         document.getElementById('insCalls').innerHTML = '<span style="color:var(--muted)">No downstream callees detected</span>';
       }
-      if (window.highlightGraphNode) {
-        window.highlightGraphNode(name);
-      }
     }
-  </script>
 
-  <script type="module">
-    import { Graph } from 'https://cdn.jsdelivr.net/npm/graphology@0.25.4/+esm';
-    import Sigma from 'https://cdn.jsdelivr.net/npm/sigma@3.0.3/+esm';
+    window.jumpToNode = function(nodeLabelOrKey) {
+      let targetNode = nodeDataMap.get(nodeLabelOrKey);
+      if (!targetNode) {
+        for (const [k, v] of nodeDataMap.entries()) {
+          if (v.label === nodeLabelOrKey) {
+            targetNode = v;
+            break;
+          }
+        }
+      }
+      if (targetNode && networkInstance) {
+        selectSymbol(targetNode.label, targetNode.kind, targetNode.file, targetNode.signature, targetNode.doc, targetNode.calls);
+        networkInstance.selectNodes([targetNode.key]);
+        networkInstance.focus(targetNode.key, {
+          scale: 1.2,
+          animation: { duration: 400, easingFunction: 'easeInOutQuad' }
+        });
+      }
+    };
 
-    const container = document.getElementById('sigmaContainer');
-    if (container) {
+    async function initGraph() {
+      const container = document.getElementById('networkContainer');
       let raw = { nodes: [], edges: [] };
       try {
         const response = await fetch('/api/graph?project=${encodeURIComponent(projectId)}');
@@ -456,14 +477,14 @@ export function renderGraphHtml(projectId: string): string {
       }
 
       const kindColor = {
-        function: '#22c55e',
-        method: '#38bdf8',
-        struct: '#f43f5e',
-        interface: '#eab308',
-        type: '#a855f7',
-        class: '#ec4899',
-        package: '#fb923c',
-        default: '#94a3b8'
+        function: { background: '#22c55e', border: '#16a34a', highlight: '#4ade80' },
+        method: { background: '#38bdf8', border: '#0284c7', highlight: '#7dd3fc' },
+        struct: { background: '#f43f5e', border: '#e11d48', highlight: '#fb7185' },
+        interface: { background: '#eab308', border: '#ca8a04', highlight: '#fde047' },
+        type: { background: '#a855f7', border: '#9333ea', highlight: '#c084fc' },
+        class: { background: '#ec4899', border: '#db2777', highlight: '#f472b6' },
+        package: { background: '#fb923c', border: '#ea580c', highlight: '#fdba74' },
+        default: { background: '#64748b', border: '#475569', highlight: '#94a3b8' }
       };
 
       const degree = {};
@@ -476,7 +497,7 @@ export function renderGraphHtml(projectId: string): string {
       document.getElementById('edgeCount').innerText = raw.edges.length;
       document.getElementById('symFilteredCount').innerText = raw.nodes.length;
 
-      const nodeDataMap = new Map();
+      nodeDataMap.clear();
       raw.nodes.forEach(n => nodeDataMap.set(n.key, n));
 
       // Populate left symbol list
@@ -493,231 +514,104 @@ export function renderGraphHtml(projectId: string): string {
         symListContainer.querySelectorAll('.sym-item').forEach(el => {
           el.addEventListener('click', () => {
             const key = el.getAttribute('data-key');
-            const data = nodeDataMap.get(key);
-            if (data) {
-              selectSymbol(data.label, data.kind, data.file, data.signature, data.doc, data.calls);
-              if (window.jumpToNode) window.jumpToNode(data.label);
-            }
+            jumpToNode(key);
           });
         });
       } else {
         symListContainer.innerHTML = '<p style="color:var(--muted);padding:1rem">No symbols indexed yet. Click "Re-Index Codebase Now".</p>';
       }
 
-      const graph = new Graph();
-      const nodeKeyMap = {};
+      if (typeof vis === 'undefined') {
+        container.innerHTML = '<div style="color:var(--muted);padding:2rem;text-align:center">Loading visualizer...</div>';
+        return;
+      }
 
-      raw.nodes.forEach(n => {
-        nodeKeyMap[n.label] = n.key;
+      const visNodes = raw.nodes.map(n => {
         const deg = degree[n.key] || n.degree || 0;
-        graph.addNode(n.key, {
+        const col = kindColor[n.kind] || kindColor.default;
+        return {
+          id: n.key,
           label: n.label,
-          x: 0,
-          y: 0,
-          size: Math.min(24, Math.max(5, 5 + Math.sqrt(deg) * 3.5)),
-          color: kindColor[n.kind] || kindColor.default,
-          originalColor: kindColor[n.kind] || kindColor.default,
-          kind: n.kind,
-          file: n.file,
-          signature: n.signature,
-          doc: n.doc,
-          calls: n.calls || []
-        });
+          title: n.label + ' (' + n.kind + ' in ' + n.file + ')',
+          shape: 'dot',
+          size: Math.min(30, Math.max(12, 12 + Math.sqrt(deg) * 3)),
+          color: {
+            background: col.background,
+            border: col.border,
+            highlight: { background: col.highlight, border: '#ffffff' },
+            hover: { background: col.highlight, border: '#ffffff' }
+          },
+          font: { color: '#f8fafc', size: 12, face: 'ui-monospace, monospace' },
+          borderWidth: 2,
+          shadow: { enabled: true, color: 'rgba(0,0,0,0.5)', size: 5, x: 2, y: 2 }
+        };
       });
 
-      raw.edges.forEach(e => {
-        if (graph.hasNode(e.source) && graph.hasNode(e.target)) {
-          if (!graph.hasEdge(e.source, e.target)) {
-            graph.addEdge(e.source, e.target, { color: '#1e293b', size: 1.2, originalColor: '#1e293b' });
+      const visEdges = raw.edges.map(e => ({
+        from: e.source,
+        to: e.target,
+        arrows: 'to',
+        color: { color: '#1e3a5f', highlight: '#38bdf8', hover: '#38bdf8' },
+        width: 1.2,
+        smooth: { type: 'continuous' }
+      }));
+
+      nodeDataSet = new vis.DataSet(visNodes);
+      edgeDataSet = new vis.DataSet(visEdges);
+
+      const options = {
+        interaction: {
+          hover: true,
+          tooltipDelay: 100,
+          hideEdgesOnDrag: false,
+          zoomView: true,
+          dragView: true
+        },
+        physics: {
+          solver: 'forceAtlas2Based',
+          forceAtlas2Based: {
+            gravitationalConstant: -50,
+            centralGravity: 0.01,
+            springLength: 90,
+            springConstant: 0.08,
+            damping: 0.4
+          },
+          stabilization: {
+            enabled: true,
+            iterations: 150,
+            updateInterval: 25
           }
-        }
-      });
-
-      function runLayout() {
-        const keys = graph.nodes();
-        const len = keys.length;
-        if (len === 0) return;
-        const pos = {};
-        keys.forEach((k, i) => {
-          const a = (i / len) * Math.PI * 2;
-          const r = 80 + Math.sqrt(len) * 28;
-          pos[k] = { x: Math.cos(a) * r, y: Math.sin(a) * r };
-        });
-
-        const adj = {};
-        graph.edges().forEach(e => {
-          const s = graph.source(e);
-          const t = graph.target(e);
-          (adj[s] = adj[s] || []).push(t);
-          (adj[t] = adj[t] || []).push(s);
-        });
-
-        for (let it = 0; it < 120; it++) {
-          const cool = 0.15 * (1 - it / 120);
-          keys.forEach(k => {
-            const p = pos[k];
-            for (let s = 0; s < 10; s++) {
-              const o = keys[Math.floor(Math.random() * len)];
-              if (o === k) continue;
-              const q = pos[o];
-              const dx = p.x - q.x;
-              const dy = p.y - q.y;
-              const d = Math.max(20, Math.sqrt(dx * dx + dy * dy));
-              const f = (8000 / (d * d)) * cool;
-              p.x += (dx / d) * f;
-              p.y += (dy / d) * f;
-            }
-            (adj[k] || []).forEach(nb => {
-              const q = pos[nb];
-              const dx = q.x - p.x;
-              const dy = q.y - p.y;
-              const d = Math.max(1, Math.sqrt(dx * dx + dy * dy));
-              const f = (d - 60) * 0.003 * (it / 120 + 0.2);
-              p.x += (dx / d) * f;
-              p.y += (dy / d) * f;
-            });
-          });
-        }
-
-        keys.forEach(k => {
-          graph.setNodeAttribute(k, 'x', pos[k].x);
-          graph.setNodeAttribute(k, 'y', pos[k].y);
-        });
-      }
-
-      runLayout();
-
-      const renderer = new Sigma(graph, container, {
-        renderEdgeLabels: false,
-        labelColor: { color: '#e2e8f0' },
-        labelSize: 11,
-        labelFont: 'ui-monospace, monospace',
-        defaultDrawNodeHover: (context, data, settings) => {
-          context.beginPath();
-          context.arc(data.x, data.y, data.size + 4, 0, Math.PI * 2);
-          context.fillStyle = 'rgba(56, 189, 248, 0.3)';
-          context.fill();
-        }
-      });
-
-      function fitView() {
-        const keys = graph.nodes();
-        if (keys.length === 0) return;
-        let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
-        keys.forEach(k => {
-          const x = graph.getNodeAttribute(k, 'x');
-          const y = graph.getNodeAttribute(k, 'y');
-          minX = Math.min(minX, x); maxX = Math.max(maxX, x);
-          minY = Math.min(minY, y); maxY = Math.max(maxY, y);
-        });
-        const w = container.clientWidth || 600;
-        const h = container.clientHeight || 400;
-        const ratio = Math.min(1.2, Math.max(0.2, Math.max((maxX - minX + 100) / w, (maxY - minY + 100) / h)));
-        renderer.getCamera().animate({ x: (minX + maxX) / 2, y: (minY + maxY) / 2, ratio: ratio }, { duration: 300 });
-      }
-
-      fitView();
-
-      window.highlightGraphNode = function(nodeNameOrKey) {
-        let key = graph.hasNode(nodeNameOrKey) ? nodeNameOrKey : nodeKeyMap[nodeNameOrKey];
-        if (!key) return;
-        const neighbors = new Set(graph.neighbors(key));
-        neighbors.add(key);
-
-        graph.forEachNode((k, attrs) => {
-          if (neighbors.has(k)) {
-            graph.setNodeAttribute(k, 'color', attrs.originalColor);
-          } else {
-            graph.setNodeAttribute(k, 'color', '#1e293b');
-          }
-        });
-
-        graph.forEachEdge((edge, attrs, source, target) => {
-          if (source === key || target === key) {
-            graph.setEdgeAttribute(edge, 'color', '#38bdf8');
-            graph.setEdgeAttribute(edge, 'size', 2.5);
-          } else {
-            graph.setEdgeAttribute(edge, 'color', '#0f172a');
-            graph.setEdgeAttribute(edge, 'size', 0.5);
-          }
-        });
-
-        renderer.refresh();
-      };
-
-      window.jumpToNode = function(nodeLabel) {
-        const key = nodeKeyMap[nodeLabel];
-        if (key && graph.hasNode(key)) {
-          const attrs = graph.getNodeAttributes(key);
-          selectSymbol(attrs.label, attrs.kind, attrs.file, attrs.signature, attrs.doc, attrs.calls || []);
-          renderer.getCamera().animate({ x: attrs.x, y: attrs.y, ratio: 0.4 }, { duration: 300 });
         }
       };
 
-      let dragged = null;
-      renderer.on('downNode', e => {
-        dragged = e.node;
-        renderer.getCamera().disable();
-      });
+      networkInstance = new vis.Network(container, { nodes: nodeDataSet, edges: edgeDataSet }, options);
 
-      renderer.getMouseCaptor().on('mousemove', e => {
-        if (dragged) {
-          const p = renderer.viewportToGraph({ x: e.x, y: e.y });
-          graph.setNodeAttribute(dragged, 'x', p.x);
-          graph.setNodeAttribute(dragged, 'y', p.y);
-          renderer.refresh();
+      networkInstance.on('click', function(params) {
+        if (params.nodes.length > 0) {
+          const selectedId = params.nodes[0];
+          const nodeData = nodeDataMap.get(selectedId);
+          if (nodeData) {
+            selectSymbol(nodeData.label, nodeData.kind, nodeData.file, nodeData.signature, nodeData.doc, nodeData.calls);
+          }
         }
-      });
-
-      renderer.getMouseCaptor().on('mouseup', () => {
-        if (dragged) {
-          dragged = null;
-          renderer.getCamera().enable();
-        }
-      });
-
-      renderer.on('clickNode', e => {
-        const n = graph.getNodeAttributes(e.node);
-        selectSymbol(n.label, n.kind, n.file, n.signature, n.doc, n.calls || []);
-      });
-
-      renderer.on('clickStage', () => {
-        graph.forEachNode((k, attrs) => {
-          graph.setNodeAttribute(k, 'color', attrs.originalColor);
-        });
-        graph.forEachEdge((edge, attrs) => {
-          graph.setEdgeAttribute(edge, 'color', attrs.originalColor || '#1e293b');
-          graph.setEdgeAttribute(edge, 'size', 1.2);
-        });
-        renderer.refresh();
       });
 
       document.getElementById('btnZoomIn').addEventListener('click', () => {
-        renderer.getCamera().animatedZoom({ factor: 1.4, duration: 200 });
+        networkInstance.moveTo({ scale: networkInstance.getScale() * 1.3 });
       });
       document.getElementById('btnZoomOut').addEventListener('click', () => {
-        renderer.getCamera().animatedUnzoom({ factor: 1.4, duration: 200 });
+        networkInstance.moveTo({ scale: networkInstance.getScale() * 0.7 });
       });
-      document.getElementById('btnReset').addEventListener('click', fitView);
-      document.getElementById('btnLayout').addEventListener('click', () => {
-        runLayout();
-        fitView();
-        renderer.refresh();
+      document.getElementById('btnReset').addEventListener('click', () => {
+        networkInstance.fit({ animation: { duration: 400 } });
       });
-
-      const filterInput = document.getElementById('symFilter');
-      if (filterInput) {
-        filterInput.addEventListener('input', () => {
-          const q = filterInput.value.toLowerCase();
-          graph.forEachNode((k, attrs) => {
-            const hit = !q || (attrs.label || '').toLowerCase().includes(q) || (attrs.file || '').toLowerCase().includes(q);
-            graph.setNodeAttribute(k, 'color', hit ? attrs.originalColor : '#1e293b');
-            graph.setNodeAttribute(k, 'size', hit ? Math.min(24, Math.max(5, 5 + Math.sqrt(degree[k] || 0) * 3.5)) : 2);
-          });
-          renderer.refresh();
-        });
-      }
+      document.getElementById('btnRelayout').addEventListener('click', () => {
+        networkInstance.stabilize(100);
+        networkInstance.fit({ animation: { duration: 400 } });
+      });
     }
+
+    window.addEventListener('DOMContentLoaded', initGraph);
   </script>
 </body>
 </html>`;
