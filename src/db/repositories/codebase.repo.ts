@@ -1,9 +1,11 @@
 import Database from 'better-sqlite3';
+import crypto from 'node:crypto';
 import {
   CallGraphEdge,
   CallGraphNode,
   CallGraphResult,
   CodeSymbol,
+  Dataset,
   FileSummary,
   ImpactAnalysis,
   SymbolKind,
@@ -12,15 +14,97 @@ import {
 export class CodebaseRepository {
   constructor(private db: Database.Database) {}
 
-  public saveSymbolsBatch(projectId: string, symbols: CodeSymbol[], edges: Array<{ source: string; target: string }>): void {
+  public listDatasets(projectId: string): Dataset[] {
+    const rows = this.db
+      .prepare('SELECT * FROM datasets WHERE project_id = ? ORDER BY name ASC')
+      .all(projectId) as any[];
+    return rows.map((r) => ({
+      id: r.id,
+      project_id: r.project_id,
+      name: r.name,
+      description: r.description,
+      root_path: r.root_path,
+      files_count: r.files_count || 0,
+      symbols_count: r.symbols_count || 0,
+      edges_count: r.edges_count || 0,
+      created_at: r.created_at,
+      updated_at: r.updated_at,
+    }));
+  }
+
+  public getOrCreateDataset(
+    projectId: string,
+    name: string,
+    rootPath?: string,
+    description?: string
+  ): Dataset {
+    const cleanName = (name || 'default').trim();
+    const existing = this.db
+      .prepare('SELECT * FROM datasets WHERE project_id = ? AND (name = ? OR id = ?)')
+      .get(projectId, cleanName, cleanName) as any;
+
+    if (existing) {
+      if (rootPath && rootPath !== existing.root_path) {
+        this.db
+          .prepare(
+            "UPDATE datasets SET root_path = ?, updated_at = datetime('now') WHERE project_id = ? AND id = ?"
+          )
+          .run(rootPath, projectId, existing.id);
+        existing.root_path = rootPath;
+      }
+      return {
+        id: existing.id,
+        project_id: existing.project_id,
+        name: existing.name,
+        description: existing.description,
+        root_path: existing.root_path,
+        files_count: existing.files_count || 0,
+        symbols_count: existing.symbols_count || 0,
+        edges_count: existing.edges_count || 0,
+        created_at: existing.created_at,
+        updated_at: existing.updated_at,
+      };
+    }
+
+    const id = `ds_${crypto.randomBytes(8).toString('hex')}`;
+    const now = new Date().toISOString();
+    this.db
+      .prepare(
+        'INSERT INTO datasets (id, project_id, name, description, root_path, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+      )
+      .run(id, projectId, cleanName, description || `Codebase ${cleanName}`, rootPath || '.', now, now);
+
+    return {
+      id,
+      project_id: projectId,
+      name: cleanName,
+      description: description || `Codebase ${cleanName}`,
+      root_path: rootPath || '.',
+      files_count: 0,
+      symbols_count: 0,
+      edges_count: 0,
+      created_at: now,
+      updated_at: now,
+    };
+  }
+
+  public saveSymbolsBatch(
+    projectId: string,
+    datasetId: string,
+    symbols: CodeSymbol[],
+    edges: Array<{ source: string; target: string }>,
+    filesCount: number = 0
+  ): void {
+    const cleanDatasetId = datasetId || 'default';
+
     const tx = this.db.transaction(() => {
-      // Upsert symbols
+      // Upsert symbols with dataset_id
       const symStmt = this.db.prepare(`
         INSERT INTO symbols (
-          key, project_id, name, kind, package_name, file_path, start_line, end_line,
+          key, project_id, dataset_id, name, kind, package_name, file_path, start_line, end_line,
           signature, docstring, calls, degree, pagerank, community_id, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-        ON CONFLICT(project_id, key) DO UPDATE SET
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        ON CONFLICT(project_id, dataset_id, key) DO UPDATE SET
           name = excluded.name,
           kind = excluded.kind,
           package_name = excluded.package_name,
@@ -36,15 +120,11 @@ export class CodebaseRepository {
           updated_at = datetime('now')
       `);
 
-      const ftsStmt = this.db.prepare(`
-        INSERT INTO fts_symbols (symbol_key, project_id, name, signature, docstring, file_path)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `);
-
       for (const s of symbols) {
         symStmt.run(
           s.key,
           projectId,
+          cleanDatasetId,
           s.name,
           s.kind,
           s.package_name,
@@ -58,20 +138,29 @@ export class CodebaseRepository {
           s.pagerank || 0.0,
           s.community_id || 0
         );
-
-        // Update FTS
-        ftsStmt.run(s.key, projectId, s.name, s.signature || '', s.docstring || '', s.file_path);
       }
 
-      // Upsert edges
+      // Upsert edges with dataset_id
       const edgeStmt = this.db.prepare(`
-        INSERT OR IGNORE INTO symbol_edges (project_id, source_key, target_key)
-        VALUES (?, ?, ?)
+        INSERT OR IGNORE INTO symbol_edges (project_id, dataset_id, source_key, target_key)
+        VALUES (?, ?, ?, ?)
       `);
 
       for (const e of edges) {
-        edgeStmt.run(projectId, e.source, e.target);
+        edgeStmt.run(projectId, cleanDatasetId, e.source, e.target);
       }
+
+      // Update dataset statistics
+      this.db
+        .prepare(`
+          UPDATE datasets SET
+            files_count = ?,
+            symbols_count = ?,
+            edges_count = ?,
+            updated_at = datetime('now')
+          WHERE project_id = ? AND id = ?
+        `)
+        .run(filesCount, symbols.length, edges.length, projectId, cleanDatasetId);
     });
 
     tx();
@@ -79,13 +168,19 @@ export class CodebaseRepository {
 
   public findSymbols(
     projectId: string,
+    datasetId?: string,
     query?: string,
     kind?: SymbolKind,
     file?: string,
-    limit: number = 30
+    limit: number = 50
   ): CodeSymbol[] {
     let sql = 'SELECT * FROM symbols WHERE project_id = ?';
     const params: any[] = [projectId];
+
+    if (datasetId) {
+      sql += ' AND (dataset_id = ? OR dataset_id IN (SELECT id FROM datasets WHERE project_id = ? AND name = ?))';
+      params.push(datasetId, projectId, datasetId);
+    }
 
     if (kind) {
       sql += ' AND kind = ?';
@@ -99,19 +194,17 @@ export class CodebaseRepository {
 
     if (query && query.trim()) {
       sql += ' AND (name LIKE ? OR signature LIKE ? OR docstring LIKE ?)';
-      const term = `%${query.trim()}%`;
-      params.push(term, term, term);
+      params.push(`%${query}%`, `%${query}%`, `%${query}%`);
     }
 
-    sql += ' ORDER BY degree DESC, start_line ASC LIMIT ?';
+    sql += ' ORDER BY degree DESC, pagerank DESC LIMIT ?';
     params.push(limit);
 
-    const stmt = this.db.prepare(sql);
-    const rows = stmt.all(...params) as any[];
-
+    const rows = this.db.prepare(sql).all(...params) as any[];
     return rows.map((r) => ({
       key: r.key,
       project_id: r.project_id,
+      dataset_id: r.dataset_id,
       name: r.name,
       kind: r.kind as SymbolKind,
       package_name: r.package_name,
@@ -127,14 +220,26 @@ export class CodebaseRepository {
     }));
   }
 
-  public getSymbolByKey(projectId: string, symbolKey: string): CodeSymbol | null {
-    const stmt = this.db.prepare('SELECT * FROM symbols WHERE project_id = ? AND (key = ? OR name = ?)');
-    const r = stmt.get(projectId, symbolKey, symbolKey) as any;
+  public getSymbolByKey(
+    projectId: string,
+    symbolKey: string,
+    datasetId?: string
+  ): CodeSymbol | null {
+    let sql = 'SELECT * FROM symbols WHERE project_id = ? AND (key = ? OR name = ?)';
+    const params: any[] = [projectId, symbolKey, symbolKey];
+
+    if (datasetId) {
+      sql += ' AND (dataset_id = ? OR dataset_id IN (SELECT id FROM datasets WHERE project_id = ? AND name = ?))';
+      params.push(datasetId, projectId, datasetId);
+    }
+
+    const r = this.db.prepare(sql).get(...params) as any;
     if (!r) return null;
 
     return {
       key: r.key,
       project_id: r.project_id,
+      dataset_id: r.dataset_id,
       name: r.name,
       kind: r.kind as SymbolKind,
       package_name: r.package_name,
@@ -153,10 +258,11 @@ export class CodebaseRepository {
   public getCallGraph(
     projectId: string,
     symbolKey: string,
+    datasetId?: string,
     direction: 'callers' | 'callees' | 'both' = 'both',
     depth: number = 1
   ): CallGraphResult | null {
-    const root = this.getSymbolByKey(projectId, symbolKey);
+    const root = this.getSymbolByKey(projectId, symbolKey, datasetId);
     if (!root) return null;
 
     const visitedNodes = new Map<string, CallGraphNode>();
@@ -179,54 +285,60 @@ export class CodebaseRepository {
       const item = queue.shift()!;
       if (item.currentDepth >= depth) continue;
 
-      // 1. Callees (outgoing edges: source = item.key)
-      if (direction === 'callees' || direction === 'both') {
-        const calleeStmt = this.db.prepare(`
-          SELECT s.key, s.name, s.kind, s.file_path, s.start_line, s.signature
-          FROM symbol_edges e
-          JOIN symbols s ON s.key = e.target_key AND s.project_id = e.project_id
-          WHERE e.project_id = ? AND e.source_key = ?
-        `);
-        const rows = calleeStmt.all(projectId, item.key) as any[];
-        for (const row of rows) {
-          edges.push({ source: item.key, target: row.key, relation: 'calls' });
-          if (!visitedNodes.has(row.key)) {
-            visitedNodes.set(row.key, {
-              key: row.key,
-              name: row.name,
-              kind: row.kind,
-              file: row.file_path,
-              line: row.start_line,
-              signature: row.signature,
-            });
-            if (item.key === root.key) callees.push(row.name);
-            queue.push({ key: row.key, currentDepth: item.currentDepth + 1 });
+      if (direction === 'callers' || direction === 'both') {
+        let callerSql = 'SELECT source_key as caller FROM symbol_edges WHERE project_id = ? AND target_key = ?';
+        const callerParams: any[] = [projectId, item.key];
+        if (root.dataset_id) {
+          callerSql += ' AND dataset_id = ?';
+          callerParams.push(root.dataset_id);
+        }
+
+        const callerRows = this.db.prepare(callerSql).all(...callerParams) as any[];
+        for (const row of callerRows) {
+          edges.push({ source: row.caller, target: item.key, relation: 'calls' });
+          if (!visitedNodes.has(row.caller)) {
+            const sym = this.getSymbolByKey(projectId, row.caller, root.dataset_id);
+            if (sym) {
+              visitedNodes.set(row.caller, {
+                key: sym.key,
+                name: sym.name,
+                kind: sym.kind,
+                file: sym.file_path,
+                line: sym.start_line,
+                signature: sym.signature,
+              });
+              callers.push(sym.name);
+              queue.push({ key: row.caller, currentDepth: item.currentDepth + 1 });
+            }
           }
         }
       }
 
-      // 2. Callers (incoming edges: target = item.key)
-      if (direction === 'callers' || direction === 'both') {
-        const callerStmt = this.db.prepare(`
-          SELECT s.key, s.name, s.kind, s.file_path, s.start_line, s.signature
-          FROM symbol_edges e
-          JOIN symbols s ON s.key = e.source_key AND s.project_id = e.project_id
-          WHERE e.project_id = ? AND e.target_key = ?
-        `);
-        const rows = callerStmt.all(projectId, item.key) as any[];
-        for (const row of rows) {
-          edges.push({ source: row.key, target: item.key, relation: 'calls' });
-          if (!visitedNodes.has(row.key)) {
-            visitedNodes.set(row.key, {
-              key: row.key,
-              name: row.name,
-              kind: row.kind,
-              file: row.file_path,
-              line: row.start_line,
-              signature: row.signature,
-            });
-            if (item.key === root.key) callers.push(row.name);
-            queue.push({ key: row.key, currentDepth: item.currentDepth + 1 });
+      if (direction === 'callees' || direction === 'both') {
+        let calleeSql = 'SELECT target_key as callee FROM symbol_edges WHERE project_id = ? AND source_key = ?';
+        const calleeParams: any[] = [projectId, item.key];
+        if (root.dataset_id) {
+          calleeSql += ' AND dataset_id = ?';
+          calleeParams.push(root.dataset_id);
+        }
+
+        const calleeRows = this.db.prepare(calleeSql).all(...calleeParams) as any[];
+        for (const row of calleeRows) {
+          edges.push({ source: item.key, target: row.callee, relation: 'calls' });
+          if (!visitedNodes.has(row.callee)) {
+            const sym = this.getSymbolByKey(projectId, row.callee, root.dataset_id);
+            if (sym) {
+              visitedNodes.set(row.callee, {
+                key: sym.key,
+                name: sym.name,
+                kind: sym.kind,
+                file: sym.file_path,
+                line: sym.start_line,
+                signature: sym.signature,
+              });
+              callees.push(sym.name);
+              queue.push({ key: row.callee, currentDepth: item.currentDepth + 1 });
+            }
           }
         }
       }
@@ -236,81 +348,63 @@ export class CodebaseRepository {
       symbol: root,
       nodes: Array.from(visitedNodes.values()),
       edges,
-      callers,
-      callees,
+      callers: Array.from(new Set(callers)),
+      callees: Array.from(new Set(callees)),
     };
   }
 
-  public getImpactAnalysis(projectId: string, symbolKey: string): ImpactAnalysis {
-    const symbol = this.getSymbolByKey(projectId, symbolKey);
-    if (!symbol) {
-      return {
-        symbol_key: symbolKey,
-        symbol: null,
-        direct_callers: [],
-        transitive_callers: [],
-        affected_files: [],
-        blast_radius_score: 0,
-        related_memories: [],
-      };
-    }
+  public getImpactAnalysis(
+    projectId: string,
+    symbolKey: string,
+    datasetId?: string
+  ): ImpactAnalysis {
+    const root = this.getSymbolByKey(projectId, symbolKey, datasetId);
+    const callGraph = root ? this.getCallGraph(projectId, root.key, datasetId, 'callers', 2) : null;
 
-    // Direct callers
-    const directRows = this.db.prepare(`
-      SELECT s.key, s.name, s.file_path
-      FROM symbol_edges e
-      JOIN symbols s ON s.key = e.source_key AND s.project_id = e.project_id
-      WHERE e.project_id = ? AND e.target_key = ?
-    `).all(projectId, symbol.key) as any[];
+    const directCallers = callGraph ? callGraph.callers : [];
+    const transitiveCallers = callGraph
+      ? callGraph.nodes.filter((n) => n.key !== root?.key).map((n) => n.name)
+      : [];
+    const affectedFiles = Array.from(
+      new Set(callGraph ? callGraph.nodes.map((n) => n.file) : [])
+    );
 
-    const directCallers = directRows.map((r) => r.name);
-    const affectedFiles = new Set<string>([symbol.file_path]);
-    directRows.forEach((r) => affectedFiles.add(r.file_path));
-
-    // Transitive callers (2 hops)
-    const transitiveCallers: string[] = [];
-    for (const d of directRows) {
-      const transRows = this.db.prepare(`
-        SELECT s.name, s.file_path
-        FROM symbol_edges e
-        JOIN symbols s ON s.key = e.source_key AND s.project_id = e.project_id
-        WHERE e.project_id = ? AND e.target_key = ? AND s.key != ?
-      `).all(projectId, d.key, symbol.key) as any[];
-
-      for (const t of transRows) {
-        if (!directCallers.includes(t.name) && !transitiveCallers.includes(t.name)) {
-          transitiveCallers.push(t.name);
-          affectedFiles.add(t.file_path);
-        }
-      }
-    }
-
-    const blastRadius = Math.min(100, directCallers.length * 15 + transitiveCallers.length * 5 + affectedFiles.size * 10);
+    const blastRadius = directCallers.length * 1.5 + (transitiveCallers.length - directCallers.length) * 0.8 + affectedFiles.length * 2.0;
 
     return {
-      symbol_key: symbol.key,
-      symbol,
+      symbol_key: symbolKey,
+      symbol: root,
       direct_callers: directCallers,
       transitive_callers: transitiveCallers,
-      affected_files: Array.from(affectedFiles),
-      blast_radius_score: blastRadius,
+      affected_files: affectedFiles,
+      blast_radius_score: parseFloat(blastRadius.toFixed(2)),
       related_memories: [],
     };
   }
 
-  public getFileSummary(projectId: string, filePath: string): FileSummary {
-    const symbols = this.findSymbols(projectId, undefined, undefined, filePath, 100);
+  public getFileSummary(
+    projectId: string,
+    filePath: string,
+    datasetId?: string
+  ): FileSummary {
+    let sql = 'SELECT * FROM symbols WHERE project_id = ? AND file_path = ?';
+    const params: any[] = [projectId, filePath];
+    if (datasetId) {
+      sql += ' AND (dataset_id = ? OR dataset_id IN (SELECT id FROM datasets WHERE project_id = ? AND name = ?))';
+      params.push(datasetId, projectId, datasetId);
+    }
+
+    const symbols = this.db.prepare(sql).all(...params) as any[];
+
     const ext = filePath.split('.').pop() || '';
     const langMap: Record<string, string> = {
-      ts: 'typescript',
-      tsx: 'typescript-react',
-      js: 'javascript',
-      jsx: 'javascript-react',
-      py: 'python',
-      go: 'go',
-      rs: 'rust',
-      json: 'json',
-      md: 'markdown',
+      ts: 'TypeScript',
+      tsx: 'TypeScript (React)',
+      js: 'JavaScript',
+      jsx: 'JavaScript (React)',
+      go: 'Go',
+      py: 'Python',
+      rs: 'Rust',
     };
 
     let maxLine = 0;
@@ -333,15 +427,31 @@ export class CodebaseRepository {
     };
   }
 
-  public getAllGraphData(projectId: string) {
-    const symbols = this.db.prepare('SELECT * FROM symbols WHERE project_id = ? ORDER BY degree DESC LIMIT 1000').all(projectId) as any[];
-    const edges = this.db.prepare('SELECT source_key as source, target_key as target FROM symbol_edges WHERE project_id = ?').all(projectId) as any[];
+  public getAllGraphData(projectId: string, datasetId?: string) {
+    let symSql = 'SELECT * FROM symbols WHERE project_id = ?';
+    const symParams: any[] = [projectId];
+    if (datasetId) {
+      symSql += ' AND (dataset_id = ? OR dataset_id IN (SELECT id FROM datasets WHERE project_id = ? AND name = ?))';
+      symParams.push(datasetId, projectId, datasetId);
+    }
+    symSql += ' ORDER BY degree DESC LIMIT 1000';
+
+    let edgeSql = 'SELECT source_key as source, target_key as target FROM symbol_edges WHERE project_id = ?';
+    const edgeParams: any[] = [projectId];
+    if (datasetId) {
+      edgeSql += ' AND (dataset_id = ? OR dataset_id IN (SELECT id FROM datasets WHERE project_id = ? AND name = ?))';
+      edgeParams.push(datasetId, projectId, datasetId);
+    }
+
+    const symbols = this.db.prepare(symSql).all(...symParams) as any[];
+    const edges = this.db.prepare(edgeSql).all(...edgeParams) as any[];
 
     return {
       nodes: symbols.map((s) => ({
         key: s.key,
         label: s.name,
         kind: s.kind,
+        dataset_id: s.dataset_id,
         package: s.package_name,
         file: s.file_path,
         signature: s.signature,

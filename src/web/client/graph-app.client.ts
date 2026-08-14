@@ -7,6 +7,7 @@ export function renderClientScript(projectId: string): string {
     const nodeDataMap = new Map();
     let currentRawData = { nodes: [], edges: [] };
     let activeColorMode = 'kind';
+    let currentDatasetId = '';
 
     // Apple System Color Palettes (macOS Dark Vibrancy)
     const macCommunityPalette = [
@@ -38,6 +39,30 @@ export function renderClientScript(projectId: string): string {
       return macCommunityPalette[idx];
     }
 
+    async function loadDatasets() {
+      try {
+        const res = await fetch('/api/datasets?project=${encodeURIComponent(projectId)}');
+        const datasets = await res.json();
+        const select = document.getElementById('datasetSelect');
+        if (datasets.length > 0) {
+          select.innerHTML = datasets.map(d => \`
+            <option value="\${d.id}">\${d.name} (\${d.symbols_count} syms)</option>
+          \`).join('');
+          currentDatasetId = datasets[0].id;
+        } else {
+          select.innerHTML = '<option value="default">default (0 syms)</option>';
+          currentDatasetId = 'default';
+        }
+      } catch (e) {
+        console.error('Failed loading datasets:', e);
+      }
+    }
+
+    async function switchDataset(datasetId) {
+      currentDatasetId = datasetId;
+      await fetchAndRenderGraph();
+    }
+
     async function triggerReindex() {
       const btn = event.target;
       btn.innerText = '⏳ Indexing...';
@@ -46,16 +71,41 @@ export function renderClientScript(projectId: string): string {
         const res = await fetch('/api/codebase/index', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ path: '.' })
+          body: JSON.stringify({ path: '.', dataset: currentDatasetId })
         });
         const data = await res.json();
-        alert('Indexing complete: ' + data.filesIndexed + ' files, ' + data.symbolsCount + ' symbols in ' + data.durationMs + 'ms');
-        location.reload();
+        alert('Dataset indexing complete: ' + data.filesIndexed + ' files, ' + data.symbolsCount + ' symbols in ' + data.durationMs + 'ms');
+        await loadDatasets();
+        await fetchAndRenderGraph();
       } catch (err) {
         alert('Indexing error: ' + err.message);
       } finally {
-        btn.innerText = '⚡ Re-Index Codebase';
+        btn.innerText = '⚡ Re-Index Dataset';
         btn.disabled = false;
+      }
+    }
+
+    async function promptIndexNewDataset() {
+      const datasetName = prompt('Enter a name for this codebase dataset (e.g. "auth-service", "frontend"):');
+      if (!datasetName) return;
+      const folderPath = prompt('Enter relative or absolute folder path to index:', '.');
+      if (!folderPath) return;
+
+      try {
+        const res = await fetch('/api/codebase/index', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: folderPath, dataset: datasetName.trim() })
+        });
+        const data = await res.json();
+        alert('Successfully indexed dataset "' + datasetName + '": ' + data.symbolsCount + ' symbols, ' + data.edgesCount + ' relations in ' + data.durationMs + 'ms');
+        await loadDatasets();
+        const select = document.getElementById('datasetSelect');
+        select.value = data.datasetId;
+        currentDatasetId = data.datasetId;
+        await fetchAndRenderGraph();
+      } catch (err) {
+        alert('Failed indexing new dataset: ' + err.message);
       }
     }
 
@@ -194,10 +244,12 @@ export function renderClientScript(projectId: string): string {
       }
     }
 
-    async function initGraph() {
+    async function fetchAndRenderGraph() {
       const container = document.getElementById('networkContainer');
+      const url = '/api/graph?project=${encodeURIComponent(projectId)}' + (currentDatasetId ? '&dataset=' + encodeURIComponent(currentDatasetId) : '');
+      
       try {
-        const response = await fetch('/api/graph?project=${encodeURIComponent(projectId)}');
+        const response = await fetch(url);
         currentRawData = await response.json();
       } catch (e) {
         currentRawData = { nodes: [], edges: [] };
@@ -225,7 +277,7 @@ export function renderClientScript(projectId: string): string {
       nodeDataMap.clear();
       raw.nodes.forEach(n => nodeDataMap.set(n.key, n));
 
-      // Populate left symbol list (macOS Style)
+      // Populate left symbol list
       const symListContainer = document.getElementById('symbolList');
       if (raw.nodes.length > 0) {
         symListContainer.innerHTML = raw.nodes.map(n => \`
@@ -245,7 +297,7 @@ export function renderClientScript(projectId: string): string {
           });
         });
       } else {
-        symListContainer.innerHTML = '<p style="color:var(--mac-text-muted);padding:1rem;font-size:0.8rem">No symbols indexed yet.</p>';
+        symListContainer.innerHTML = '<p style="color:var(--mac-text-muted);padding:1rem;font-size:0.8rem">No symbols in this dataset yet.</p>';
       }
 
       if (typeof vis === 'undefined') {
@@ -311,6 +363,10 @@ export function renderClientScript(projectId: string): string {
         }
       };
 
+      if (networkInstance) {
+        networkInstance.destroy();
+      }
+
       networkInstance = new vis.Network(container, { nodes: nodeDataSet, edges: edgeDataSet }, options);
 
       networkInstance.on('click', function(params) {
@@ -333,19 +389,26 @@ export function renderClientScript(projectId: string): string {
           }
         }
       });
+    }
+
+    async function initGraph() {
+      await loadDatasets();
+      await fetchAndRenderGraph();
 
       document.getElementById('btnZoomIn').addEventListener('click', () => {
-        networkInstance.moveTo({ scale: networkInstance.getScale() * 1.3 });
+        if (networkInstance) networkInstance.moveTo({ scale: networkInstance.getScale() * 1.3 });
       });
       document.getElementById('btnZoomOut').addEventListener('click', () => {
-        networkInstance.moveTo({ scale: networkInstance.getScale() * 0.7 });
+        if (networkInstance) networkInstance.moveTo({ scale: networkInstance.getScale() * 0.7 });
       });
       document.getElementById('btnReset').addEventListener('click', () => {
-        networkInstance.fit({ animation: { duration: 350 } });
+        if (networkInstance) networkInstance.fit({ animation: { duration: 350 } });
       });
       document.getElementById('btnRelayout').addEventListener('click', () => {
-        networkInstance.stabilize(100);
-        networkInstance.fit({ animation: { duration: 350 } });
+        if (networkInstance) {
+          networkInstance.stabilize(100);
+          networkInstance.fit({ animation: { duration: 350 } });
+        }
       });
     }
 

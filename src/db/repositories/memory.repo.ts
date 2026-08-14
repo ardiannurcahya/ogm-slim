@@ -153,14 +153,15 @@ export class MemoryRepository {
   public recall(query: RecallQuery): MemoryCapsule[] {
     const limit = Math.min(query.limit || 10, 50);
 
-    if (query.text && query.text.trim()) {
+    const searchText = query.text || query.query;
+    if (searchText && searchText.trim()) {
       // Clean query text for FTS5
-      const cleanFts = query.text
+      const cleanFts = searchText
         .replace(/['"*^~]/g, ' ')
         .trim()
         .split(/\s+/)
-        .filter((w) => w.length > 1)
-        .map((w) => `"${w}"*`)
+        .filter((w: string) => w.length > 1)
+        .map((w: string) => `"${w}"*`)
         .join(' OR ');
 
       if (cleanFts) {

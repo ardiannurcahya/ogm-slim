@@ -65,12 +65,16 @@ export const MemoryInspectSchema = z.object({
   memory_id: z.string().describe('Memory ID to inspect with full provenance and history'),
 });
 
+export const CodebaseListDatasetsSchema = z.object({}).describe('List all indexed codebase datasets');
+
 export const CodebaseIndexSchema = z.object({
   path: z.string().default('.').describe('Root directory path of the codebase to index'),
+  dataset: z.string().optional().describe('Optional custom dataset name (e.g. "frontend", "backend", "auth-service")'),
   incremental: z.boolean().default(true).describe('Whether to run incrementally'),
 });
 
 export const CodebaseFindSymbolSchema = z.object({
+  dataset: z.string().optional().describe('Filter by specific codebase dataset name or ID'),
   query: z.string().optional().describe('Symbol name, keyword, or pattern search'),
   kind: z.enum(['function', 'method', 'struct', 'interface', 'type', 'class', 'variable', 'package']).optional().describe('Symbol kind filter'),
   file: z.string().optional().describe('File path substring filter'),
@@ -79,14 +83,17 @@ export const CodebaseFindSymbolSchema = z.object({
 
 export const CodebaseCallGraphSchema = z.object({
   symbol_key: z.string().describe('Symbol key or name to trace call graph for'),
+  dataset: z.string().optional().describe('Optional codebase dataset name or ID'),
   direction: z.enum(['callers', 'callees', 'both']).default('both').describe('Call graph direction'),
   depth: z.number().int().min(1).max(3).default(1).describe('Call graph traversal depth'),
 });
 
 export const CodebaseImpactAnalysisSchema = z.object({
   symbol_key: z.string().describe('Symbol key or name to analyze downstream impact and blast radius for'),
+  dataset: z.string().optional().describe('Optional codebase dataset name or ID'),
 });
 
 export const CodebaseFileSummarySchema = z.object({
   file: z.string().describe('Relative file path to get architectural summary for'),
+  dataset: z.string().optional().describe('Optional codebase dataset name or ID'),
 });

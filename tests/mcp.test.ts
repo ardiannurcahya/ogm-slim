@@ -17,7 +17,7 @@ describe('OGM-Slim MCP Server', () => {
   let mcpServer: any;
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ogm-lw-mcp-'));
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ogm-slim-mcp-'));
     const dbPath = path.join(tempDir, 'test_mcp.db');
     dbManager = new DatabaseManager(dbPath, true);
     dbManager.ensureDefaultProject('mcp-proj', 'secret');
@@ -36,11 +36,11 @@ describe('OGM-Slim MCP Server', () => {
     fs.rmSync(tempDir, { recursive: true, force: true });
   });
 
-  test('should list all 11 MCP tools', async () => {
+  test('should list all 12 MCP tools including datasets', async () => {
     const handler = (mcpServer as any)._requestHandlers.get(ListToolsRequestSchema.shape.method.value);
     assert.ok(handler);
     const result = await handler({ method: 'tools/list', params: {} });
-    assert.equal(result.tools.length, 11);
+    assert.equal(result.tools.length, 12);
 
     const toolNames = result.tools.map((t: any) => t.name);
     assert.ok(toolNames.includes('memory_recall'));
@@ -49,6 +49,7 @@ describe('OGM-Slim MCP Server', () => {
     assert.ok(toolNames.includes('memory_feedback'));
     assert.ok(toolNames.includes('memory_forget'));
     assert.ok(toolNames.includes('memory_inspect'));
+    assert.ok(toolNames.includes('codebase_list_datasets'));
     assert.ok(toolNames.includes('codebase_index'));
     assert.ok(toolNames.includes('codebase_find_symbol'));
     assert.ok(toolNames.includes('codebase_call_graph'));
@@ -67,14 +68,15 @@ describe('OGM-Slim MCP Server', () => {
         name: 'memory_observe',
         arguments: {
           kind: 'command_output',
-          observation: 'Unit tests passed 100%',
+          observation: { stdout: 'Tests passed 100%' },
+          metadata: { file: 'src/main.ts' },
         },
       },
     });
 
     assert.ok(!obsRes.isError);
-    const obsData = JSON.parse(obsRes.content[0].text);
-    assert.ok(obsData.episode.id);
+    const obsParsed = JSON.parse(obsRes.content[0].text);
+    assert.ok(obsParsed.episode.id.startsWith('ep_'));
 
     // 2. Commit
     const commitRes = await handler({
@@ -82,16 +84,16 @@ describe('OGM-Slim MCP Server', () => {
       params: {
         name: 'memory_commit',
         arguments: {
-          type: 'decision',
-          content: { summary: 'Migrated to TypeScript engine' },
-          episodes: [{ episode_id: obsData.episode.id, purpose: 'evidence' }],
+          type: 'procedure',
+          content: { summary: 'Use npm test to run suites', command: 'npm test' },
+          episodes: [{ episode_id: obsParsed.episode.id, purpose: 'evidence' }],
         },
       },
     });
 
     assert.ok(!commitRes.isError);
-    const commitData = JSON.parse(commitRes.content[0].text);
-    assert.ok(commitData.memory.id);
+    const commitParsed = JSON.parse(commitRes.content[0].text);
+    assert.ok(commitParsed.memory.id.startsWith('mem_'));
 
     // 3. Recall
     const recallRes = await handler({
@@ -99,13 +101,14 @@ describe('OGM-Slim MCP Server', () => {
       params: {
         name: 'memory_recall',
         arguments: {
-          text: 'TypeScript engine',
+          text: 'npm test run suites',
         },
       },
     });
 
     assert.ok(!recallRes.isError);
-    const recalledList = JSON.parse(recallRes.content[0].text);
-    assert.ok(recalledList.length > 0);
+    const recallParsed = JSON.parse(recallRes.content[0].text);
+    assert.equal(recallParsed.length, 1);
+    assert.equal(recallParsed[0].id, commitParsed.memory.id);
   });
 });

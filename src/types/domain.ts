@@ -2,6 +2,19 @@
  * Domain types for OGM-Slim (OpenGraphMemory Slim)
  */
 
+export interface Dataset {
+  id: string;
+  project_id: string;
+  name: string;
+  description?: string;
+  root_path?: string;
+  files_count: number;
+  symbols_count: number;
+  edges_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export type EpisodeKind =
   | 'observation'
   | 'message'
@@ -80,7 +93,9 @@ export interface MemoryDetail {
 
 export interface RecallQuery {
   project_id: string;
+  query?: string;
   text?: string;
+  type?: MemoryType;
   exact?: Record<string, string>;
   entity_key?: string;
   as_of?: string;
@@ -98,11 +113,20 @@ export interface MemoryCapsule {
   citations: string[];
 }
 
-export type SymbolKind = 'function' | 'method' | 'struct' | 'interface' | 'type' | 'class' | 'variable' | 'package';
+export type SymbolKind =
+  | 'function'
+  | 'method'
+  | 'struct'
+  | 'interface'
+  | 'type'
+  | 'class'
+  | 'variable'
+  | 'package';
 
 export interface CodeSymbol {
   key: string;
   project_id: string;
+  dataset_id?: string;
   name: string;
   kind: SymbolKind;
   package_name: string;

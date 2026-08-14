@@ -14,6 +14,7 @@ import {
   MemoryFeedbackSchema,
   MemoryForgetSchema,
   MemoryInspectSchema,
+  CodebaseListDatasetsSchema,
   CodebaseIndexSchema,
   CodebaseFindSymbolSchema,
   CodebaseCallGraphSchema,
@@ -102,7 +103,6 @@ export function createMcpServer(
                 type: 'array',
                 items: {
                   type: 'object',
-                  required: ['episode_id', 'purpose'],
                   properties: {
                     episode_id: { type: 'string' },
                     purpose: { type: 'string', enum: ['source', 'evidence', 'verification'] },
@@ -115,7 +115,7 @@ export function createMcpServer(
         },
         {
           name: 'memory_feedback',
-          description: 'Confirm, reject, correct, merge, supersede, stale, or verify an existing memory.',
+          description: 'Record feedback on a memory (useful, incorrect, outdated, etc.).',
           inputSchema: {
             type: 'object',
             required: ['memory_id', 'kind'],
@@ -128,7 +128,7 @@ export function createMcpServer(
         },
         {
           name: 'memory_forget',
-          description: 'Archive or invalidate by default; hard delete permanently removes memory record.',
+          description: 'Archive or invalidate a memory by ID.',
           inputSchema: {
             type: 'object',
             required: ['memory_id'],
@@ -140,7 +140,7 @@ export function createMcpServer(
         },
         {
           name: 'memory_inspect',
-          description: 'Read bounded memory provenance, evidence history, and ranking explanation.',
+          description: 'Inspect full memory details including supporting episodes, evidence, feedback, and history.',
           inputSchema: {
             type: 'object',
             required: ['memory_id'],
@@ -150,22 +150,32 @@ export function createMcpServer(
           },
         },
         {
+          name: 'codebase_list_datasets',
+          description: 'List all indexed codebase datasets, their file counts, symbols, and relation metrics.',
+          inputSchema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        {
           name: 'codebase_index',
-          description: 'Scan and index a local codebase directory into the symbol knowledge graph in seconds.',
+          description: 'Scan and index a local codebase directory into a dedicated dataset knowledge graph in seconds.',
           inputSchema: {
             type: 'object',
             properties: {
               path: { type: 'string', default: '.', description: 'Directory path to index' },
+              dataset: { type: 'string', description: 'Optional custom dataset name (e.g. "frontend", "backend")' },
               incremental: { type: 'boolean', default: true },
             },
           },
         },
         {
           name: 'codebase_find_symbol',
-          description: 'Find symbols (functions, structs, interfaces, methods) by name, kind, or file without reading source files.',
+          description: 'Find symbols (functions, structs, interfaces, methods) by name, kind, or file within a dataset.',
           inputSchema: {
             type: 'object',
             properties: {
+              dataset: { type: 'string', description: 'Dataset name or ID filter' },
               query: { type: 'string' },
               kind: { type: 'string', enum: ['function', 'method', 'struct', 'interface', 'type', 'class', 'variable', 'package'] },
               file: { type: 'string' },
@@ -175,12 +185,13 @@ export function createMcpServer(
         },
         {
           name: 'codebase_call_graph',
-          description: 'Trace callers and callees for a symbol up to 2-3 hops.',
+          description: 'Trace callers and callees for a symbol up to 2-3 hops within a dataset.',
           inputSchema: {
             type: 'object',
             required: ['symbol_key'],
             properties: {
               symbol_key: { type: 'string' },
+              dataset: { type: 'string', description: 'Dataset name or ID filter' },
               direction: { type: 'string', enum: ['callers', 'callees', 'both'], default: 'both' },
               depth: { type: 'integer', default: 1, minimum: 1, maximum: 3 },
             },
@@ -194,17 +205,19 @@ export function createMcpServer(
             required: ['symbol_key'],
             properties: {
               symbol_key: { type: 'string' },
+              dataset: { type: 'string', description: 'Dataset name or ID filter' },
             },
           },
         },
         {
           name: 'codebase_file_summary',
-          description: 'Get high-density architectural summary of a file (package, LOC, defined symbols, signatures).',
+          description: 'Get high-density architectural summary of a file within a dataset.',
           inputSchema: {
             type: 'object',
             required: ['file'],
             properties: {
               file: { type: 'string' },
+              dataset: { type: 'string', description: 'Dataset name or ID filter' },
             },
           },
         },
@@ -223,7 +236,7 @@ export function createMcpServer(
           const parsed = MemoryRecallSchema.parse(args || {});
           const results = memoryService.recall({
             project_id: projectId,
-            text: parsed.text,
+            query: parsed.text,
             exact: parsed.exact,
             entity_key: parsed.entity_key,
             as_of: parsed.as_of,
@@ -291,9 +304,16 @@ export function createMcpServer(
           };
         }
 
+        case 'codebase_list_datasets': {
+          const datasets = codebaseService.listDatasets(projectId);
+          return {
+            content: [{ type: 'text', text: JSON.stringify(datasets, null, 2) }],
+          };
+        }
+
         case 'codebase_index': {
           const parsed = CodebaseIndexSchema.parse(args || {});
-          const stats = await codebaseService.indexDirectory(parsed.path, projectId);
+          const stats = await codebaseService.indexDirectory(parsed.path, projectId, parsed.dataset);
           return {
             content: [{ type: 'text', text: JSON.stringify({ status: 'indexed', stats }, null, 2) }],
           };
@@ -301,7 +321,7 @@ export function createMcpServer(
 
         case 'codebase_find_symbol': {
           const parsed = CodebaseFindSymbolSchema.parse(args || {});
-          const symbols = codebaseService.findSymbols(projectId, parsed.query, parsed.kind as any, parsed.file, parsed.limit);
+          const symbols = codebaseService.findSymbols(projectId, parsed.dataset, parsed.query, parsed.kind as any, parsed.file, parsed.limit);
           return {
             content: [{ type: 'text', text: JSON.stringify(symbols, null, 2) }],
           };
@@ -309,7 +329,7 @@ export function createMcpServer(
 
         case 'codebase_call_graph': {
           const parsed = CodebaseCallGraphSchema.parse(args || {});
-          const result = codebaseService.getCallGraph(projectId, parsed.symbol_key, parsed.direction, parsed.depth);
+          const result = codebaseService.getCallGraph(projectId, parsed.symbol_key, parsed.dataset, parsed.direction, parsed.depth);
           if (!result) {
             throw new McpError(ErrorCode.InvalidParams, `Symbol not found: ${parsed.symbol_key}`);
           }
@@ -320,7 +340,7 @@ export function createMcpServer(
 
         case 'codebase_impact_analysis': {
           const parsed = CodebaseImpactAnalysisSchema.parse(args || {});
-          const impact = codebaseService.getImpactAnalysis(projectId, parsed.symbol_key);
+          const impact = codebaseService.getImpactAnalysis(projectId, parsed.symbol_key, parsed.dataset);
           return {
             content: [{ type: 'text', text: JSON.stringify(impact, null, 2) }],
           };
@@ -328,7 +348,7 @@ export function createMcpServer(
 
         case 'codebase_file_summary': {
           const parsed = CodebaseFileSummarySchema.parse(args || {});
-          const summary = codebaseService.getFileSummary(projectId, parsed.file);
+          const summary = codebaseService.getFileSummary(projectId, parsed.file, parsed.dataset);
           return {
             content: [{ type: 'text', text: JSON.stringify(summary, null, 2) }],
           };

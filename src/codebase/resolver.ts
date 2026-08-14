@@ -5,6 +5,8 @@ import { computeGraphAnalytics, GraphEdge } from '../ranking/centrality.js';
 import { CodeSymbol } from '../types/domain.js';
 
 export interface IndexingStats {
+  datasetId: string;
+  datasetName: string;
   filesIndexed: number;
   symbolsCount: number;
   edgesCount: number;
@@ -17,6 +19,8 @@ export class CodebaseIndexer {
   public async indexDirectoryAsync(
     rootDir: string,
     projectId: string = 'default',
+    datasetId: string = 'default',
+    datasetName: string = 'default',
     ignorePatterns: string[] = ['node_modules', '.git', 'dist', 'build', '.next', 'coverage']
   ): Promise<{ symbols: CodeSymbol[]; edges: GraphEdge[]; stats: IndexingStats }> {
     const startTime = Date.now();
@@ -36,6 +40,7 @@ export class CodebaseIndexer {
 
     for (const ef of extractedFiles) {
       for (const sym of ef.symbols) {
+        sym.dataset_id = datasetId;
         allSymbols.push(sym);
         if (!symbolMapByName.has(sym.name)) {
           symbolMapByName.set(sym.name, []);
@@ -52,7 +57,6 @@ export class CodebaseIndexer {
       for (const call of ef.rawCalls) {
         const candidates = symbolMapByName.get(call.calleeToken);
         if (candidates && candidates.length > 0) {
-          // Prefer symbol in same file or same package
           const target =
             candidates.find((c) => c.package_name === path.dirname(ef.relativePath)) || candidates[0];
 
@@ -67,7 +71,7 @@ export class CodebaseIndexer {
       }
     }
 
-    // Compute centrality and ranking
+    // Compute centrality and Louvain ranking
     computeGraphAnalytics(allSymbols, edges);
 
     const durationMs = Date.now() - startTime;
@@ -75,6 +79,8 @@ export class CodebaseIndexer {
       symbols: allSymbols,
       edges,
       stats: {
+        datasetId,
+        datasetName,
         filesIndexed: extractedFiles.length,
         symbolsCount: allSymbols.length,
         edgesCount: edges.length,

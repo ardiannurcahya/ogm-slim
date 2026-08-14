@@ -27,6 +27,7 @@ program
   .option('-h, --host <string>', 'Host address to bind to', '127.0.0.1')
   .option('-c, --config <string>', 'Path to config JSON file')
   .option('--project <string>', 'Default project ID', 'default')
+  .option('--dataset <string>', 'Dataset name to auto-index', 'ogm-slim')
   .action(async (options) => {
     const config = loadConfig(options.config);
     if (options.port) config.server.port = parseInt(options.port, 10);
@@ -46,10 +47,11 @@ program
     // Auto-index current directory if enabled
     if (config.codebase.auto_index) {
       try {
-        console.log(`[OGM-Slim] ⚡ Auto-indexing repository at ${process.cwd()}...`);
-        const stats = await codebaseService.indexDirectory(process.cwd(), config.auth.default_project_id);
+        const dsName = options.dataset || 'ogm-slim';
+        console.log(`[OGM-Slim] ⚡ Auto-indexing repository at ${process.cwd()} into dataset "${dsName}"...`);
+        const stats = await codebaseService.indexDirectory(process.cwd(), config.auth.default_project_id, dsName);
         console.log(
-          `[OGM-Slim] ✅ Indexed ${stats.filesIndexed} files, ${stats.symbolsCount} symbols, ${stats.edgesCount} relations in ${stats.durationMs}ms.`
+          `[OGM-Slim] ✅ Indexed dataset "${stats.datasetName}" (${stats.filesIndexed} files, ${stats.symbolsCount} symbols, ${stats.edgesCount} relations) in ${stats.durationMs}ms.`
         );
       } catch (err) {
         console.warn(`[OGM-Slim] ⚠️ Auto-index failed:`, err);
@@ -63,7 +65,7 @@ program
   🧠 OGM-Slim (OpenGraphMemory Slim - TypeScript Engine)
 ===============================================================
   HTTP Server:     http://${config.server.host}:${config.server.port}
-  Sigma.js Graph:  http://${config.server.host}:${config.server.port}/admin
+  Graph Dashboard: http://${config.server.host}:${config.server.port}/admin
   Database Path:   ${config.database.path}
   Project ID:      ${config.auth.default_project_id}
 ===============================================================
@@ -88,8 +90,9 @@ program
 // 3. Index Command
 program
   .command('index [dirPath]')
-  .description('Index a codebase directory into the symbol knowledge graph')
+  .description('Index a codebase directory into a dedicated dataset knowledge graph')
   .option('-p, --project <string>', 'Project ID', 'default')
+  .option('-d, --dataset <string>', 'Dataset name (e.g. frontend, backend, auth)', 'default')
   .option('-c, --config <string>', 'Path to config JSON file')
   .action(async (dirPath = '.', options) => {
     const config = loadConfig(options.config);
@@ -100,10 +103,10 @@ program
     const codebaseRepo = new CodebaseRepository(rawDb);
     const codebaseService = new CodebaseService(codebaseRepo);
 
-    console.log(`[OGM-Slim] 🔍 Scanning and indexing ${dirPath}...`);
-    const stats = await codebaseService.indexDirectory(dirPath, projectId);
+    console.log(`[OGM-Slim] 🔍 Scanning and indexing ${dirPath} into dataset "${options.dataset}"...`);
+    const stats = await codebaseService.indexDirectory(dirPath, projectId, options.dataset);
     console.log(
-      `[OGM-Slim] ✅ Done! Indexed ${stats.filesIndexed} files, ${stats.symbolsCount} symbols, ${stats.edgesCount} call edges in ${stats.durationMs}ms.`
+      `[OGM-Slim] ✅ Done! Indexed dataset "${stats.datasetName}" (${stats.filesIndexed} files, ${stats.symbolsCount} symbols, ${stats.edgesCount} call edges) in ${stats.durationMs}ms.`
     );
   });
 

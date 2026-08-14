@@ -9,6 +9,22 @@ CREATE TABLE IF NOT EXISTS projects (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Datasets table (for isolating different codebase knowledge graphs)
+CREATE TABLE IF NOT EXISTS datasets (
+  id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT,
+  root_path TEXT,
+  files_count INTEGER DEFAULT 0,
+  symbols_count INTEGER DEFAULT 0,
+  edges_count INTEGER DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(project_id, name)
+);
+CREATE INDEX IF NOT EXISTS idx_datasets_project ON datasets(project_id);
+
 -- Episodes (immutable observations)
 CREATE TABLE IF NOT EXISTS episodes (
   id TEXT PRIMARY KEY,
@@ -63,10 +79,11 @@ CREATE TABLE IF NOT EXISTS feedback (
 );
 CREATE INDEX IF NOT EXISTS idx_feedback_memory ON feedback(memory_id);
 
--- Codebase Symbols
+-- Codebase Symbols (scoped by project_id and dataset_id)
 CREATE TABLE IF NOT EXISTS symbols (
   key TEXT NOT NULL,
   project_id TEXT NOT NULL,
+  dataset_id TEXT NOT NULL DEFAULT 'default',
   name TEXT NOT NULL,
   kind TEXT NOT NULL,
   package_name TEXT NOT NULL,
@@ -80,21 +97,23 @@ CREATE TABLE IF NOT EXISTS symbols (
   pagerank REAL NOT NULL DEFAULT 0.0,
   community_id INTEGER NOT NULL DEFAULT 0,
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-  PRIMARY KEY (project_id, key)
+  PRIMARY KEY (project_id, dataset_id, key)
 );
-CREATE INDEX IF NOT EXISTS idx_symbols_name ON symbols(project_id, name);
-CREATE INDEX IF NOT EXISTS idx_symbols_file ON symbols(project_id, file_path);
-CREATE INDEX IF NOT EXISTS idx_symbols_kind ON symbols(project_id, kind);
+CREATE INDEX IF NOT EXISTS idx_symbols_dataset ON symbols(project_id, dataset_id);
+CREATE INDEX IF NOT EXISTS idx_symbols_name ON symbols(project_id, dataset_id, name);
+CREATE INDEX IF NOT EXISTS idx_symbols_file ON symbols(project_id, dataset_id, file_path);
+CREATE INDEX IF NOT EXISTS idx_symbols_kind ON symbols(project_id, dataset_id, kind);
 
--- Codebase Call Graph Edges
+-- Codebase Call Graph Edges (scoped by project_id and dataset_id)
 CREATE TABLE IF NOT EXISTS symbol_edges (
   project_id TEXT NOT NULL,
+  dataset_id TEXT NOT NULL DEFAULT 'default',
   source_key TEXT NOT NULL,
   target_key TEXT NOT NULL,
-  PRIMARY KEY (project_id, source_key, target_key)
+  PRIMARY KEY (project_id, dataset_id, source_key, target_key)
 );
-CREATE INDEX IF NOT EXISTS idx_edges_source ON symbol_edges(project_id, source_key);
-CREATE INDEX IF NOT EXISTS idx_edges_target ON symbol_edges(project_id, target_key);
+CREATE INDEX IF NOT EXISTS idx_edges_source ON symbol_edges(project_id, dataset_id, source_key);
+CREATE INDEX IF NOT EXISTS idx_edges_target ON symbol_edges(project_id, dataset_id, target_key);
 
 -- Full-Text Search for Memories
 CREATE VIRTUAL TABLE IF NOT EXISTS fts_memories USING fts5(
@@ -104,24 +123,86 @@ CREATE VIRTUAL TABLE IF NOT EXISTS fts_memories USING fts5(
   tokenize = 'porter unicode61'
 );
 
--- Full-Text Search for Code Symbols
+-- Full-Text Search for Symbols
 CREATE VIRTUAL TABLE IF NOT EXISTS fts_symbols USING fts5(
   symbol_key UNINDEXED,
   project_id UNINDEXED,
+  dataset_id UNINDEXED,
   name,
+  file_path,
   signature,
   docstring,
-  file_path,
   tokenize = 'porter unicode61'
 );
 `;
 
 export function runMigrations(db: Database.Database): void {
-  db.exec('PRAGMA foreign_keys = ON;');
-  db.exec('PRAGMA journal_mode = WAL;');
-  db.exec('PRAGMA synchronous = NORMAL;');
-  db.exec('PRAGMA temp_store = MEMORY;');
-  db.exec('PRAGMA cache_size = -64000;'); // 64MB cache
+  // Ensure foreign keys & WAL mode
+  db.pragma('journal_mode = WAL');
+  db.pragma('foreign_keys = ON');
 
+  // 1. Check & upgrade legacy symbols table
+  try {
+    const tableInfo = db.prepare("PRAGMA table_info(symbols)").all() as any[];
+    if (tableInfo.length > 0) {
+      const dsCol = tableInfo.find((col) => col.name === 'dataset_id');
+      if (!dsCol || dsCol.pk === 0) {
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS symbols_temp (
+            key TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            dataset_id TEXT NOT NULL DEFAULT 'default',
+            name TEXT NOT NULL,
+            kind TEXT NOT NULL,
+            package_name TEXT NOT NULL,
+            file_path TEXT NOT NULL,
+            start_line INTEGER NOT NULL,
+            end_line INTEGER NOT NULL,
+            signature TEXT NOT NULL DEFAULT '',
+            docstring TEXT NOT NULL DEFAULT '',
+            calls TEXT NOT NULL DEFAULT '[]',
+            degree INTEGER NOT NULL DEFAULT 0,
+            pagerank REAL NOT NULL DEFAULT 0.0,
+            community_id INTEGER NOT NULL DEFAULT 0,
+            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+            PRIMARY KEY (project_id, dataset_id, key)
+          );
+          INSERT OR IGNORE INTO symbols_temp (key, project_id, dataset_id, name, kind, package_name, file_path, start_line, end_line, signature, docstring, calls, degree, pagerank, community_id, updated_at)
+          SELECT key, project_id, COALESCE(dataset_id, 'default'), name, kind, package_name, file_path, start_line, end_line, signature, docstring, calls, degree, pagerank, community_id, updated_at FROM symbols;
+          DROP TABLE symbols;
+          ALTER TABLE symbols_temp RENAME TO symbols;
+        `);
+      }
+    }
+  } catch (e) {
+    console.warn('[OGM-Slim] Warning during symbols table migration:', e);
+  }
+
+  // 2. Check & upgrade legacy symbol_edges table
+  try {
+    const edgeTableInfo = db.prepare("PRAGMA table_info(symbol_edges)").all() as any[];
+    if (edgeTableInfo.length > 0) {
+      const edgeDsCol = edgeTableInfo.find((col) => col.name === 'dataset_id');
+      if (!edgeDsCol || edgeDsCol.pk === 0) {
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS symbol_edges_temp (
+            project_id TEXT NOT NULL,
+            dataset_id TEXT NOT NULL DEFAULT 'default',
+            source_key TEXT NOT NULL,
+            target_key TEXT NOT NULL,
+            PRIMARY KEY (project_id, dataset_id, source_key, target_key)
+          );
+          INSERT OR IGNORE INTO symbol_edges_temp (project_id, dataset_id, source_key, target_key)
+          SELECT project_id, COALESCE(dataset_id, 'default'), source_key, target_key FROM symbol_edges;
+          DROP TABLE symbol_edges;
+          ALTER TABLE symbol_edges_temp RENAME TO symbol_edges;
+        `);
+      }
+    }
+  } catch (e) {
+    console.warn('[OGM-Slim] Warning during symbol_edges table migration:', e);
+  }
+
+  // 3. Execute full schema
   db.exec(SCHEMA_SQL);
 }

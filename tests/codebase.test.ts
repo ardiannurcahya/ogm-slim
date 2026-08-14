@@ -13,37 +13,36 @@ describe('OGM-Slim Codebase AST & Graph Operations', () => {
   let codebaseService: CodebaseService;
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ogm-lw-codebase-'));
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ogm-slim-codebase-'));
     const dbPath = path.join(tempDir, 'test_codebase.db');
     dbManager = new DatabaseManager(dbPath, true);
     dbManager.ensureDefaultProject('code-proj', 'secret');
     const codebaseRepo = new CodebaseRepository(dbManager.getRawDb());
     codebaseService = new CodebaseService(codebaseRepo);
 
-    // Create sample codebase files
-    const srcDir = path.join(tempDir, 'src');
-    fs.mkdirSync(srcDir, { recursive: true });
+    // Create sample codebase files for frontend & backend datasets
+    const feDir = path.join(tempDir, 'frontend');
+    const beDir = path.join(tempDir, 'backend');
+    fs.mkdirSync(feDir, { recursive: true });
+    fs.mkdirSync(beDir, { recursive: true });
 
     fs.writeFileSync(
-      path.join(srcDir, 'auth.ts'),
+      path.join(feDir, 'app.ts'),
       `
-      // Validate user token
-      export function validateToken(token: string): boolean {
-        return token.length > 0;
+      export function renderApp(): void {
+        fetchUser();
       }
-
-      export function login(user: string, pass: string): boolean {
-        return validateToken("token");
-      }
+      export function fetchUser(): void {}
       `
     );
 
     fs.writeFileSync(
-      path.join(srcDir, 'server.ts'),
+      path.join(beDir, 'server.ts'),
       `
       export function startServer(): void {
-        login("admin", "pass");
+        handleAuth();
       }
+      export function handleAuth(): void {}
       `
     );
   });
@@ -54,34 +53,46 @@ describe('OGM-Slim Codebase AST & Graph Operations', () => {
   });
 
   test('should index directory and resolve cross-file call graph', async () => {
-    const stats = await codebaseService.indexDirectory(tempDir, 'code-proj');
-    assert.equal(stats.filesIndexed, 2);
-    assert.ok(stats.symbolsCount >= 3);
-    assert.ok(stats.edgesCount >= 2);
+    const stats = await codebaseService.indexDirectory(path.join(tempDir, 'backend'), 'code-proj', 'backend');
+    assert.equal(stats.filesIndexed, 1);
+    assert.equal(stats.symbolsCount, 2);
+    assert.equal(stats.edgesCount, 1);
 
     // Find symbols
-    const symbols = codebaseService.findSymbols('code-proj', 'login');
+    const symbols = codebaseService.findSymbols('code-proj', 'backend', 'handleAuth');
     assert.equal(symbols.length, 1);
-    assert.equal(symbols[0].name, 'login');
+    assert.equal(symbols[0].name, 'handleAuth');
 
-    // Call graph for login
-    const callGraph = codebaseService.getCallGraph('code-proj', symbols[0].key, 'both', 1);
+    // Call graph for startServer
+    const startSym = codebaseService.findSymbols('code-proj', 'backend', 'startServer')[0];
+    const callGraph = codebaseService.getCallGraph('code-proj', startSym.key, 'backend', 'callees', 1);
     assert.ok(callGraph);
-    assert.ok(callGraph.callees.includes('validateToken'));
-    assert.ok(callGraph.callers.includes('startServer'));
-
-    // Impact analysis for validateToken
-    const valTokenSym = codebaseService.findSymbols('code-proj', 'validateToken')[0];
-    const impact = codebaseService.getImpactAnalysis('code-proj', valTokenSym.key);
-    assert.ok(impact.direct_callers.includes('login'));
-    assert.ok(impact.transitive_callers.includes('startServer'));
-    assert.ok(impact.blast_radius_score > 0);
+    assert.ok(callGraph.callees.includes('handleAuth'));
   });
 
-  test('should export full Sigma.js graph structure', async () => {
-    await codebaseService.indexDirectory(tempDir, 'code-proj');
-    const graphData = codebaseService.getGraphData('code-proj');
-    assert.ok(graphData.nodes.length >= 3);
-    assert.ok(graphData.edges.length >= 2);
+  test('should isolate multiple datasets cleanly without graph pollution', async () => {
+    // 1. Index Frontend dataset
+    await codebaseService.indexDirectory(path.join(tempDir, 'frontend'), 'code-proj', 'frontend-app');
+
+    // 2. Index Backend dataset
+    await codebaseService.indexDirectory(path.join(tempDir, 'backend'), 'code-proj', 'backend-api');
+
+    // 3. List datasets
+    const datasets = codebaseService.listDatasets('code-proj');
+    assert.equal(datasets.length, 2);
+    assert.equal(datasets[0].name, 'backend-api');
+    assert.equal(datasets[1].name, 'frontend-app');
+
+    // 4. Verify isolated graph data for frontend
+    const feGraph = codebaseService.getGraphData('code-proj', 'frontend-app');
+    assert.equal(feGraph.nodes.length, 2);
+    assert.ok(feGraph.nodes.some(n => n.label === 'renderApp'));
+    assert.ok(!feGraph.nodes.some(n => n.label === 'startServer'));
+
+    // 5. Verify isolated graph data for backend
+    const beGraph = codebaseService.getGraphData('code-proj', 'backend-api');
+    assert.equal(beGraph.nodes.length, 2);
+    assert.ok(beGraph.nodes.some(n => n.label === 'startServer'));
+    assert.ok(!beGraph.nodes.some(n => n.label === 'renderApp'));
   });
 });

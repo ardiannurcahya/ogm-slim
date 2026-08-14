@@ -26,10 +26,18 @@ export function registerApiRoutes(
     return c.html(renderGraphPage(projectId));
   });
 
+  // Datasets List
+  app.get('/api/datasets', (c) => {
+    const projectId = c.req.query('project') || config.auth.default_project_id;
+    const datasets = codebaseService.listDatasets(projectId);
+    return c.json(datasets);
+  });
+
   // Graph Data
   app.get('/api/graph', (c) => {
     const projectId = c.req.query('project') || config.auth.default_project_id;
-    const data = codebaseService.getGraphData(projectId);
+    const dataset = c.req.query('dataset');
+    const data = codebaseService.getGraphData(projectId, dataset);
     return c.json(data);
   });
 
@@ -45,18 +53,20 @@ export function registerApiRoutes(
     const body = await c.req.json().catch(() => ({}));
     const dirPath = body.path || '.';
     const projectId = body.project_id || config.auth.default_project_id;
-    const stats = await codebaseService.indexDirectory(dirPath, projectId, body.ignore);
+    const datasetName = body.dataset || body.dataset_name;
+    const stats = await codebaseService.indexDirectory(dirPath, projectId, datasetName, body.ignore);
     return c.json(stats);
   });
 
   // Codebase Symbols
   app.get('/api/codebase/symbols', (c) => {
     const projectId = c.req.query('project') || config.auth.default_project_id;
+    const dataset = c.req.query('dataset');
     const query = c.req.query('q');
     const kind = c.req.query('kind') as any;
     const file = c.req.query('file');
     const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!, 10) : undefined;
-    const symbols = codebaseService.findSymbols(projectId, query, kind, file, limit);
+    const symbols = codebaseService.findSymbols(projectId, dataset, query, kind, file, limit);
     return c.json({ count: symbols.length, symbols });
   });
 
@@ -64,11 +74,12 @@ export function registerApiRoutes(
   app.get('/api/codebase/call-graph', (c) => {
     const projectId = c.req.query('project') || config.auth.default_project_id;
     const key = c.req.query('key');
+    const dataset = c.req.query('dataset');
     if (!key) return c.json({ error: 'Missing key parameter' }, 400);
 
     const direction = (c.req.query('dir') as any) || 'both';
     const depth = c.req.query('depth') ? parseInt(c.req.query('depth')!, 10) : 1;
-    const result = codebaseService.getCallGraph(projectId, key, direction, depth);
+    const result = codebaseService.getCallGraph(projectId, key, dataset, direction, depth);
     return c.json(result || { error: 'Symbol not found' }, result ? 200 : 404);
   });
 
@@ -76,9 +87,10 @@ export function registerApiRoutes(
   app.get('/api/codebase/impact', (c) => {
     const projectId = c.req.query('project') || config.auth.default_project_id;
     const key = c.req.query('key');
+    const dataset = c.req.query('dataset');
     if (!key) return c.json({ error: 'Missing key parameter' }, 400);
 
-    const impact = codebaseService.getImpactAnalysis(projectId, key);
+    const impact = codebaseService.getImpactAnalysis(projectId, key, dataset);
     return c.json(impact);
   });
 
@@ -86,9 +98,10 @@ export function registerApiRoutes(
   app.get('/api/codebase/file', (c) => {
     const projectId = c.req.query('project') || config.auth.default_project_id;
     const path = c.req.query('path');
+    const dataset = c.req.query('dataset');
     if (!path) return c.json({ error: 'Missing path parameter' }, 400);
 
-    const summary = codebaseService.getFileSummary(projectId, path);
+    const summary = codebaseService.getFileSummary(projectId, path, dataset);
     return c.json(summary);
   });
 
@@ -99,7 +112,7 @@ export function registerApiRoutes(
     const obsContent = body.observation !== undefined ? body.observation : body.content;
     const result = memoryService.observe(
       projectId,
-      body.kind || 'interaction',
+      body.kind || 'observation',
       obsContent,
       body.metadata,
       body.observed_at,
@@ -112,45 +125,48 @@ export function registerApiRoutes(
   app.post('/api/memory/commit', async (c) => {
     const body = await c.req.json();
     const projectId = body.project_id || config.auth.default_project_id;
-    const refs = body.episodes || body.references || [];
     const result = memoryService.commit(
       projectId,
-      body.type,
+      body.type || 'learning',
       body.content,
-      body.confidence ?? 1.0,
-      refs,
+      body.confidence !== undefined ? body.confidence : 1.0,
+      body.episodes,
       body.idempotency_key
     );
     return c.json(result);
   });
 
-  // Memory Recall (Supports both GET query and POST body)
-  const handleRecall = async (c: any) => {
-    const projectId = c.req.query('project') || (c.req.method === 'POST' ? (await c.req.json().catch(() => ({}))).project_id : null) || config.auth.default_project_id;
-    let query = c.req.query('q') || c.req.query('query') || '';
-    let type = c.req.query('type') as any;
-    let limit = c.req.query('limit') ? parseInt(c.req.query('limit')!, 10) : undefined;
+  // Memory Recall (Support both POST and GET for convenience)
+  app.post('/api/memory/recall', async (c) => {
+    const body = await c.req.json();
+    const projectId = body.project_id || config.auth.default_project_id;
+    const results = memoryService.recall({
+      project_id: projectId,
+      query: body.text || body.query,
+      type: body.type,
+      exact: body.exact,
+      entity_key: body.entity_key,
+      as_of: body.as_of,
+      limit: body.limit,
+    });
+    return c.json(results);
+  });
 
-    if (c.req.method === 'POST') {
-      const body = await c.req.json().catch(() => ({}));
-      query = body.text || body.query || body.q || query;
-      type = body.type || type;
-      limit = body.limit || limit;
-    }
-
-    const capsules = memoryService.recall({
+  app.get('/api/memory/recall', (c) => {
+    const projectId = c.req.query('project') || config.auth.default_project_id;
+    const query = c.req.query('q') || c.req.query('query') || c.req.query('text');
+    const type = c.req.query('type') as any;
+    const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!, 10) : undefined;
+    const results = memoryService.recall({
       project_id: projectId,
       query,
       type,
       limit,
     });
-    return c.json(capsules);
-  };
+    return c.json(results);
+  });
 
-  app.get('/api/memory/recall', handleRecall);
-  app.post('/api/memory/recall', handleRecall);
-
-  // Memory Detail & Provenance
+  // Memory Detail / Inspection
   app.get('/api/memory/inspect', (c) => {
     const projectId = c.req.query('project') || config.auth.default_project_id;
     const memoryId = c.req.query('id');
@@ -164,16 +180,15 @@ export function registerApiRoutes(
   app.post('/api/memory/feedback', async (c) => {
     const body = await c.req.json();
     const projectId = body.project_id || config.auth.default_project_id;
-    const success = memoryService.feedback(projectId, body.id || body.memory_id, body.kind || 'useful', body.detail);
+    const success = memoryService.feedback(projectId, body.memory_id, body.kind, body.detail);
     return c.json({ success });
   });
 
-  // Memory Invalidation / Archive
+  // Memory Forget
   app.post('/api/memory/forget', async (c) => {
     const body = await c.req.json();
     const projectId = body.project_id || config.auth.default_project_id;
-    const mode = body.hard ? 'hard_delete' : body.mode || 'archive';
-    const success = memoryService.forget(projectId, body.id || body.memory_id, mode);
+    const success = memoryService.forget(projectId, body.memory_id, body.mode);
     return c.json({ success });
   });
 }
