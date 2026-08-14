@@ -21,7 +21,7 @@ export class CodebaseIndexer {
     projectId: string = 'default',
     datasetId: string = 'default',
     datasetName: string = 'default',
-    ignorePatterns: string[] = ['node_modules', '.git', 'dist', 'build', '.next', 'coverage']
+    ignorePatterns: string[] = ['node_modules', '.git', 'dist', 'build', '.next', 'coverage', '.cache', 'generated']
   ): Promise<{ symbols: CodeSymbol[]; edges: GraphEdge[]; stats: IndexingStats }> {
     const startTime = Date.now();
     const files = this.walkFiles(rootDir, ignorePatterns);

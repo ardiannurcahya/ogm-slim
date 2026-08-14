@@ -98,6 +98,17 @@ export class CodebaseRepository {
     const cleanDatasetId = datasetId || 'default';
 
     const tx = this.db.transaction(() => {
+      // Clear previous symbols and edges for this specific dataset to avoid stale zombie nodes
+      this.db
+        .prepare('DELETE FROM symbols WHERE project_id = ? AND dataset_id = ?')
+        .run(projectId, cleanDatasetId);
+      this.db
+        .prepare('DELETE FROM symbol_edges WHERE project_id = ? AND dataset_id = ?')
+        .run(projectId, cleanDatasetId);
+      try {
+        this.db.prepare('DELETE FROM fts_symbols WHERE project_id = ?').run(projectId);
+      } catch {}
+
       // Upsert symbols with dataset_id
       const symStmt = this.db.prepare(`
         INSERT INTO symbols (
