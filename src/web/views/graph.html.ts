@@ -4,7 +4,7 @@ export function renderGraphHtml(projectId: string): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>OGM-LW Codebase Knowledge Graph</title>
+  <title>OGM-Slim Codebase Knowledge Graph</title>
   <style>
     :root {
       color-scheme: dark;
@@ -288,7 +288,7 @@ export function renderGraphHtml(projectId: string): string {
 </head>
 <body>
   <header>
-    <h1>🧠 OGM-LW Codebase Knowledge Graph</h1>
+    <h1>🧠 OGM-Slim Codebase Knowledge Graph</h1>
     <nav>
       <a href="/admin">&larr; Dashboard</a>
       <a href="javascript:location.reload()">Refresh Graph</a>

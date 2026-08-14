@@ -1,5 +1,5 @@
 /**
- * Domain types for OGM-LW (OpenGraphMemory Lightweight)
+ * Domain types for OGM-Slim (OpenGraphMemory Slim)
  */
 
 export type EpisodeKind =

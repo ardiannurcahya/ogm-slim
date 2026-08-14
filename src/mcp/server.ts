@@ -28,7 +28,7 @@ export function createMcpServer(
 ): Server {
   const server = new Server(
     {
-      name: 'ogm-lw',
+      name: 'ogm-slim',
       version: '1.0.0',
     },
     {

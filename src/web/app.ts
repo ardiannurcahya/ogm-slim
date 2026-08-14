@@ -16,7 +16,7 @@ export function createWebServer(
   app.use('*', cors({ origin: '*' }));
 
   // Health
-  app.get('/health', (c) => c.json({ status: 'ok', service: 'ogm-lw', version: '1.0.0' }));
+  app.get('/health', (c) => c.json({ status: 'ok', service: 'ogm-slim', version: '1.0.0' }));
   app.get('/ready', (c) => c.json({ status: 'ready' }));
 
   // Web UI Views

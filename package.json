@@ -1,10 +1,10 @@
 {
-  "name": "ogm-lw",
+  "name": "ogm-slim",
   "version": "1.0.0",
-  "description": "Persistent memory service & codebase knowledge graph for AI coding agents (Lightweight TypeScript Edition)",
+  "description": "Persistent memory service & codebase knowledge graph for AI coding agents (Slim TypeScript Edition)",
   "main": "dist/index.js",
   "bin": {
-    "ogm-lw": "./dist/cli.js"
+    "ogm-slim": "./dist/cli.js"
   },
   "type": "module",
   "scripts": {

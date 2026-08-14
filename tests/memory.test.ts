@@ -7,7 +7,7 @@ import { DatabaseManager } from '../src/db/database.js';
 import { MemoryRepository } from '../src/db/repositories/memory.repo.js';
 import { MemoryService } from '../src/services/memory.service.js';
 
-describe('OGM-LW Memory Operations', () => {
+describe('OGM-Slim Memory Operations', () => {
   let tempDir: string;
   let dbManager: DatabaseManager;
   let memoryService: MemoryService;

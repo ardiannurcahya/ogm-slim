@@ -7,7 +7,7 @@ import { DatabaseManager } from '../src/db/database.js';
 import { CodebaseRepository } from '../src/db/repositories/codebase.repo.js';
 import { CodebaseService } from '../src/services/codebase.service.js';
 
-describe('OGM-LW Codebase AST & Graph Operations', () => {
+describe('OGM-Slim Codebase AST & Graph Operations', () => {
   let tempDir: string;
   let dbManager: DatabaseManager;
   let codebaseService: CodebaseService;

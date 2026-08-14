@@ -1,4 +1,4 @@
-# 🧠 OGM-LW (OpenGraphMemory Lightweight - TypeScript Edition)
+# 🧠 OGM-Slim (OpenGraphMemory Slim - TypeScript Edition)
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg)](https://www.typescriptlang.org/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-Official%20SDK-purple.svg)](https://modelcontextprotocol.io/)
@@ -6,13 +6,13 @@
 [![Sigma.js](https://img.shields.io/badge/Visualizer-Sigma.js%20v3-orange.svg)](https://www.sigmajs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**OGM-LW** is a lightweight, zero-configuration operational memory service and AST codebase knowledge graph designed specifically for AI coding agents (**Claude Code**, **Google Antigravity**, **OpenCode**, **Cursor**, **Windsurf**).
+**OGM-Slim** is a ultra-lightweight, zero-configuration operational memory service and AST codebase knowledge graph designed specifically for AI coding agents (**Claude Code**, **Google Antigravity**, **OpenCode**, **Cursor**, **Windsurf**).
 
 ---
 
 ## ✨ Features
 
-- ⚡ **Zero-Config 1-Step Startup**: Run with `npx ogm-lw serve` or `npm start`.
+- ⚡ **Zero-Config 1-Step Startup**: Run with `npx ogm-slim serve` or `npm start`.
 - 🗄️ **Local SQLite + FTS5**: Super fast, zero network latency, with full-text search and WAL journaling.
 - 🌳 **Multi-Language AST Codebase Indexing**: Extracts functions, methods, structs, interfaces, and cross-file call graphs for **TypeScript**, **JavaScript**, **Go**, **Python**, and **Rust**.
 - 🕸️ **Interactive Sigma.js v3 Graph**: Circular force-directed layout, degree-based node sizing, neighbor caller/callee glow highlighting, search filters, and symbol contract inspector.
@@ -26,7 +26,7 @@
 ### 1. Run HTTP Server & Web Graph Dashboard
 ```bash
 # Start server (auto-indexes current directory)
-npx ogm-lw serve
+npx ogm-slim serve
 
 # Open in browser:
 # http://127.0.0.1:8080/admin
@@ -35,22 +35,22 @@ npx ogm-lw serve
 ### 2. Configure MCP for Your AI Coding Agent
 ```bash
 # Auto-configure for Google Antigravity / Gemini CLI
-npx ogm-lw harness install antigravity --apply
+npx ogm-slim harness install antigravity --apply
 
 # Auto-configure for Claude Code
-npx ogm-lw harness install claude-code --apply
+npx ogm-slim harness install claude-code --apply
 
 # Auto-configure for OpenCode
-npx ogm-lw harness install opencode --apply
+npx ogm-slim harness install opencode --apply
 ```
 
 ### 3. CLI Commands
 ```bash
-ogm-lw serve -p 8080         # Start web server & UI
-ogm-lw mcp                   # Run MCP over Stdio
-ogm-lw index .               # Scan and index codebase
-ogm-lw stats                 # Show database metrics
-ogm-lw harness print claude  # Print MCP config snippet
+ogm-slim serve -p 8080         # Start web server & UI
+ogm-slim mcp                   # Run MCP over Stdio
+ogm-slim index .               # Scan and index codebase
+ogm-slim stats                 # Show database metrics
+ogm-slim harness print claude  # Print MCP config snippet
 ```
 
 ---

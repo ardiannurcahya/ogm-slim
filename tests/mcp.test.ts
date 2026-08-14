@@ -11,7 +11,7 @@ import { CodebaseService } from '../src/services/codebase.service.js';
 import { createMcpServer } from '../src/mcp/server.js';
 import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 
-describe('OGM-LW MCP Server', () => {
+describe('OGM-Slim MCP Server', () => {
   let tempDir: string;
   let dbManager: DatabaseManager;
   let mcpServer: any;

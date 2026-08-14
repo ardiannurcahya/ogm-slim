@@ -22,5 +22,5 @@ export async function runMcpStdio(customConfigPath?: string): Promise<void> {
   const transport = new StdioServerTransport();
 
   await server.connect(transport);
-  console.error(`[OGM-LW MCP] Connected over stdio for project: ${config.auth.default_project_id}`);
+  console.error(`[OGM-Slim MCP] Connected over stdio for project: ${config.auth.default_project_id}`);
 }

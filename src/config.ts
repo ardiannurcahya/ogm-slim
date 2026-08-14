@@ -6,9 +6,9 @@ import { OgmLwConfig } from './types/config.js';
 export function getDefaultConfigDir(): string {
   const xdg = process.env.XDG_CONFIG_HOME;
   if (xdg && xdg.trim()) {
-    return path.join(xdg, 'ogm-lw');
+    return path.join(xdg, 'ogm-slim');
   }
-  return path.join(os.homedir(), '.config', 'ogm-lw');
+  return path.join(os.homedir(), '.config', 'ogm-slim');
 }
 
 export function getDefaultDbPath(): string {
@@ -30,7 +30,7 @@ export function getDefaultConfig(): OgmLwConfig {
     },
     auth: {
       default_project_id: 'default',
-      api_key: 'ogm-lw-admin-secret-key-local',
+      api_key: 'ogm-slim-admin-secret-key-local',
       admin_email: 'admin@local',
       admin_password: 'admin-password-local',
     },
@@ -60,7 +60,7 @@ export function loadConfig(customConfigPath?: string): OgmLwConfig {
     process.env.OGM_CONFIG_FILE,
     process.env.MEMORY_CONFIG_FILE,
     path.join(getDefaultConfigDir(), 'config.json'),
-    path.join(process.cwd(), 'ogm-lw.config.json'),
+    path.join(process.cwd(), 'ogm-slim.config.json'),
   ].filter(Boolean) as string[];
 
   for (const configPath of candidates) {
@@ -75,7 +75,7 @@ export function loadConfig(customConfigPath?: string): OgmLwConfig {
         if (parsed.log_level) config.log_level = parsed.log_level;
         break;
       } catch (err) {
-        console.warn(`[OGM-LW] Failed to parse config file at ${configPath}:`, err);
+        console.warn(`[OGM-Slim] Failed to parse config file at ${configPath}:`, err);
       }
     }
   }

@@ -5,13 +5,13 @@ import { OgmLwConfig } from '../types/config.js';
 
 export function getSkillContent(): string {
   return `---
-name: ogm-lw
-description: OpenGraphMemory Lightweight (OGM-LW) persistent agent memory and codebase AST knowledge graph. Use to recall past bug fixes, search codebase symbols, inspect call graphs, and commit durable observations.
+name: ogm-slim
+description: OpenGraphMemory Slim (OGM-Slim) persistent agent memory and codebase AST knowledge graph. Use to recall past bug fixes, search codebase symbols, inspect call graphs, and commit durable observations.
 ---
 
-# OGM-LW Agent Operational Memory & Codebase Graph
+# OGM-Slim Agent Operational Memory & Codebase Graph
 
-OGM-LW provides persistent, project-scoped operational memory and fast AST codebase search for AI coding agents.
+OGM-Slim provides persistent, project-scoped operational memory and fast AST codebase search for AI coding agents.
 
 ## 🎯 Decision Tree & Workflow
 
@@ -65,7 +65,7 @@ export function installHarnessConfig(
 
   const mcpServerConfig = {
     command: 'npx',
-    args: ['-y', 'ogm-lw', 'mcp'],
+    args: ['-y', 'ogm-slim', 'mcp'],
     env: {
       OGM_PROJECT_ID: config.auth.default_project_id,
       OGM_API_KEY: config.auth.api_key,
@@ -76,32 +76,32 @@ export function installHarnessConfig(
   switch (harness) {
     case 'claude-code': {
       configPath = path.join(home, '.claude', 'mcp.json');
-      skillPath = path.join(home, '.claude', 'skills', 'ogm-lw', 'SKILL.md');
-      snippet = JSON.stringify({ mcpServers: { 'ogm-lw': mcpServerConfig } }, null, 2);
+      skillPath = path.join(home, '.claude', 'skills', 'ogm-slim', 'SKILL.md');
+      snippet = JSON.stringify({ mcpServers: { 'ogm-slim': mcpServerConfig } }, null, 2);
       break;
     }
     case 'antigravity': {
-      configPath = path.join(home, '.gemini', 'antigravity-cli', 'mcp', 'ogm-lw.json');
-      skillPath = path.join(home, '.gemini', 'config', 'skills', 'ogm-lw', 'SKILL.md');
+      configPath = path.join(home, '.gemini', 'antigravity-cli', 'mcp', 'ogm-slim.json');
+      skillPath = path.join(home, '.gemini', 'config', 'skills', 'ogm-slim', 'SKILL.md');
       snippet = JSON.stringify(mcpServerConfig, null, 2);
       break;
     }
     case 'cursor': {
       configPath = path.join(process.cwd(), '.cursor', 'mcp.json');
       skillPath = path.join(process.cwd(), 'SKILL.md');
-      snippet = JSON.stringify({ mcpServers: { 'ogm-lw': mcpServerConfig } }, null, 2);
+      snippet = JSON.stringify({ mcpServers: { 'ogm-slim': mcpServerConfig } }, null, 2);
       break;
     }
     case 'opencode': {
       configPath = path.join(home, '.config', 'opencode', 'opencode.jsonc');
-      skillPath = path.join(home, '.config', 'opencode', 'skills', 'ogm-lw', 'SKILL.md');
-      snippet = JSON.stringify({ mcp: { 'ogm-lw': { type: 'local', ...mcpServerConfig, enabled: true } } }, null, 2);
+      skillPath = path.join(home, '.config', 'opencode', 'skills', 'ogm-slim', 'SKILL.md');
+      snippet = JSON.stringify({ mcp: { 'ogm-slim': { type: 'local', ...mcpServerConfig, enabled: true } } }, null, 2);
       break;
     }
     case 'windsurf': {
       configPath = path.join(home, '.codeium', 'windsurf', 'mcp_config.json');
-      skillPath = path.join(home, '.codeium', 'windsurf', 'skills', 'ogm-lw', 'SKILL.md');
-      snippet = JSON.stringify({ mcpServers: { 'ogm-lw': mcpServerConfig } }, null, 2);
+      skillPath = path.join(home, '.codeium', 'windsurf', 'skills', 'ogm-slim', 'SKILL.md');
+      snippet = JSON.stringify({ mcpServers: { 'ogm-slim': mcpServerConfig } }, null, 2);
       break;
     }
     default: {

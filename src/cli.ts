@@ -15,14 +15,14 @@ import { installHarnessConfig } from './harness/installer.js';
 const program = new Command();
 
 program
-  .name('ogm-lw')
-  .description('OpenGraphMemory Lightweight - Persistent Agent Memory & Codebase Knowledge Graph')
+  .name('ogm-slim')
+  .description('OpenGraphMemory Slim - Persistent Agent Memory & Codebase Knowledge Graph')
   .version('1.0.0');
 
 // 1. Serve Command
 program
   .command('serve')
-  .description('Start the OGM-LW HTTP Server and Sigma.js Graph Web Dashboard')
+  .description('Start the OGM-Slim HTTP Server and Sigma.js Graph Web Dashboard')
   .option('-p, --port <number>', 'Port number to listen on', '8080')
   .option('-h, --host <string>', 'Host address to bind to', '127.0.0.1')
   .option('-c, --config <string>', 'Path to config JSON file')
@@ -46,13 +46,13 @@ program
     // Auto-index current directory if enabled
     if (config.codebase.auto_index) {
       try {
-        console.log(`[OGM-LW] ⚡ Auto-indexing repository at ${process.cwd()}...`);
+        console.log(`[OGM-Slim] ⚡ Auto-indexing repository at ${process.cwd()}...`);
         const stats = codebaseService.indexDirectory(process.cwd(), config.auth.default_project_id);
         console.log(
-          `[OGM-LW] ✅ Indexed ${stats.filesIndexed} files, ${stats.symbolsCount} symbols, ${stats.edgesCount} relations in ${stats.durationMs}ms.`
+          `[OGM-Slim] ✅ Indexed ${stats.filesIndexed} files, ${stats.symbolsCount} symbols, ${stats.edgesCount} relations in ${stats.durationMs}ms.`
         );
       } catch (err) {
-        console.warn(`[OGM-LW] ⚠️ Auto-index failed:`, err);
+        console.warn(`[OGM-Slim] ⚠️ Auto-index failed:`, err);
       }
     }
 
@@ -60,7 +60,7 @@ program
 
     console.log(`
 ===============================================================
-  🧠 OGM-LW (OpenGraphMemory Lightweight - TypeScript Engine)
+  🧠 OGM-Slim (OpenGraphMemory Slim - TypeScript Engine)
 ===============================================================
   HTTP Server:     http://${config.server.host}:${config.server.port}
   Sigma.js Graph:  http://${config.server.host}:${config.server.port}/admin
@@ -100,10 +100,10 @@ program
     const codebaseRepo = new CodebaseRepository(rawDb);
     const codebaseService = new CodebaseService(codebaseRepo);
 
-    console.log(`[OGM-LW] 🔍 Scanning and indexing ${dirPath}...`);
+    console.log(`[OGM-Slim] 🔍 Scanning and indexing ${dirPath}...`);
     const stats = codebaseService.indexDirectory(dirPath, projectId);
     console.log(
-      `[OGM-LW] ✅ Done! Indexed ${stats.filesIndexed} files, ${stats.symbolsCount} symbols, ${stats.edgesCount} call edges in ${stats.durationMs}ms.`
+      `[OGM-Slim] ✅ Done! Indexed ${stats.filesIndexed} files, ${stats.symbolsCount} symbols, ${stats.edgesCount} call edges in ${stats.durationMs}ms.`
     );
   });
 
@@ -118,11 +118,11 @@ harnessCmd
     const config = loadConfig();
     const result = installHarnessConfig(harness as any, config, options.apply);
     if (options.apply) {
-      console.log(`[OGM-LW] ✅ Successfully configured ${harness}!`);
+      console.log(`[OGM-Slim] ✅ Successfully configured ${harness}!`);
       if (result.configPath) console.log(`  Config written to: ${result.configPath}`);
       if (result.skillPath) console.log(`  Skill written to:  ${result.skillPath}`);
     } else {
-      console.log(`[OGM-LW] Preview for ${harness} (use --apply to write):\n`);
+      console.log(`[OGM-Slim] Preview for ${harness} (use --apply to write):\n`);
       console.log(result.snippet);
     }
   });
