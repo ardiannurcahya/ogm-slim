@@ -27,8 +27,8 @@ export const themeCss = `
     --traffic-close: #ff5f56;
     --traffic-min: #ffbd2e;
     --traffic-max: #27c93f;
-    --mac-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-    --mac-mono: "SF Mono", Menlo, Monaco, Consolas, "JetBrains Mono", monospace;
+    --mac-font: "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Inter", "Geist", "Segoe UI", system-ui, sans-serif;
+    --mac-mono: "SF Mono", "JetBrains Mono", Menlo, Monaco, Consolas, "Geist Mono", monospace;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
