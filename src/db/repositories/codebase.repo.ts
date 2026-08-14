@@ -348,6 +348,8 @@ export class CodebaseRepository {
         doc: s.docstring,
         calls: JSON.parse(s.calls || '[]'),
         degree: s.degree,
+        pagerank: s.pagerank,
+        community_id: s.community_id || 1,
       })),
       edges: edges.map((e) => ({
         source: e.source,

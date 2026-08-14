@@ -177,6 +177,15 @@ export function renderGraphHtml(projectId: string): string {
     .kind-interface { background: rgba(234, 179, 8, 0.2); color: var(--iface); border: 1px solid rgba(234, 179, 8, 0.4); }
     .kind-type { background: rgba(168, 85, 247, 0.2); color: var(--type); border: 1px solid rgba(168, 85, 247, 0.4); }
     .kind-class { background: rgba(236, 72, 153, 0.2); color: var(--class); border: 1px solid rgba(236, 72, 153, 0.4); }
+    .comm-badge {
+      font-size: 0.65rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 0.25rem;
+      font-weight: 700;
+      display: inline-block;
+      margin-right: 0.3rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
     .sym-name { font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.88rem; }
     .sym-file { font-size: 0.72rem; color: var(--muted); margin-top: 0.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .graph-view {
@@ -207,6 +216,7 @@ export function renderGraphHtml(projectId: string): string {
       padding: 0.35rem 0.5rem;
       border-radius: 0.5rem;
       border: 1px solid var(--border);
+      align-items: center;
     }
     .graph-btn {
       background: #17233f;
@@ -249,6 +259,18 @@ export function renderGraphHtml(projectId: string): string {
       flex-direction: column;
       gap: 1rem;
     }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      background: #09101d;
+      padding: 0.6rem;
+      border-radius: 0.375rem;
+      border: 1px solid var(--border);
+    }
+    .meta-item { font-size: 0.78rem; }
+    .meta-label { color: var(--muted); margin-bottom: 0.1rem; }
+    .meta-val { font-weight: 700; color: var(--accent); font-family: ui-monospace, monospace; }
     .code-block {
       background: #050810;
       padding: 0.75rem;
@@ -304,6 +326,7 @@ export function renderGraphHtml(projectId: string): string {
       <div>Project: <strong style="color:var(--text)" id="projId">${projectId}</strong></div>
       <div>Nodes: <span class="stat-badge" id="nodeCount">-</span></div>
       <div>Edges: <span class="stat-badge" id="edgeCount">-</span></div>
+      <div>Louvain Communities: <span class="stat-badge" id="commCount">-</span></div>
     </div>
     <div class="controls">
       <button onclick="triggerReindex()">⚡ Re-Index Codebase Now</button>
@@ -328,6 +351,9 @@ export function renderGraphHtml(projectId: string): string {
             <option value="class">Class</option>
             <option value="type">Type</option>
           </select>
+          <select id="commFilter" onchange="filterSymbols()" style="flex:1">
+            <option value="">All Communities</option>
+          </select>
         </div>
       </div>
       <div class="symbol-list" id="symbolList">
@@ -342,9 +368,13 @@ export function renderGraphHtml(projectId: string): string {
         <button class="graph-btn" id="btnZoomOut" title="Zoom Out">-</button>
         <button class="graph-btn" id="btnReset" title="Fit View">Fit View</button>
         <button class="graph-btn" id="btnRelayout" title="Relayout">⚡ Relayout</button>
+        <select id="colorModeSelect" onchange="changeColorMode(this.value)" style="padding:0.3rem 0.5rem;font-size:0.8rem">
+          <option value="kind">Palette: Symbol Kind</option>
+          <option value="louvain">Palette: Louvain Modularity</option>
+        </select>
       </div>
       <div id="networkContainer"></div>
-      <div class="graph-legend">
+      <div class="graph-legend" id="graphLegend">
         <span><span class="legend-dot" style="background:var(--fn)"></span>Function</span>
         <span><span class="legend-dot" style="background:var(--method)"></span>Method</span>
         <span><span class="legend-dot" style="background:var(--struct)"></span>Struct</span>
@@ -362,9 +392,30 @@ export function renderGraphHtml(projectId: string): string {
       <div class="inspector-body" id="inspectorBox">
         <div>
           <span class="sym-kind" id="insKind" style="background:#0284c7;color:white">SELECT SYMBOL</span>
+          <span class="comm-badge" id="insComm" style="background:#334155;color:white">COMMUNITY -</span>
           <h2 id="insName" style="margin:0.4rem 0;font-size:1.1rem;font-family:ui-monospace,monospace;word-break:break-all">Click any node in graph</h2>
           <div id="insFile" style="font-size:0.8rem;color:var(--muted)">Location will show here</div>
         </div>
+
+        <div class="meta-grid">
+          <div class="meta-item">
+            <div class="meta-label">Louvain Cluster</div>
+            <div class="meta-val" id="metaComm">-</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">PageRank Centrality</div>
+            <div class="meta-val" id="metaPR">-</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Degree (In+Out)</div>
+            <div class="meta-val" id="metaDeg">-</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">Package Scope</div>
+            <div class="meta-val" id="metaPkg">-</div>
+          </div>
+        </div>
+
         <div>
           <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.3rem;font-weight:600">Type Signature</div>
           <pre class="code-block" id="insSig">// Select a function, method, or struct</pre>
@@ -386,6 +437,37 @@ export function renderGraphHtml(projectId: string): string {
     let nodeDataSet = null;
     let edgeDataSet = null;
     const nodeDataMap = new Map();
+    let currentRawData = { nodes: [], edges: [] };
+    let activeColorMode = 'kind';
+
+    const communityPalette = [
+      { background: '#38bdf8', border: '#0284c7', highlight: '#7dd3fc' }, // Sky
+      { background: '#ec4899', border: '#db2777', highlight: '#f472b6' }, // Pink
+      { background: '#22c55e', border: '#16a34a', highlight: '#4ade80' }, // Green
+      { background: '#eab308', border: '#ca8a04', highlight: '#fde047' }, // Yellow
+      { background: '#a855f7', border: '#9333ea', highlight: '#c084fc' }, // Purple
+      { background: '#f97316', border: '#ea580c', highlight: '#fdba74' }, // Orange
+      { background: '#06b6d4', border: '#0891b2', highlight: '#67e8f9' }, // Cyan
+      { background: '#f43f5e', border: '#e11d48', highlight: '#fb7185' }, // Rose
+      { background: '#14b8a6', border: '#0d9488', highlight: '#5eead4' }, // Teal
+      { background: '#8b5cf6', border: '#7c3aed', highlight: '#a78bfa' }, // Violet
+    ];
+
+    const kindColor = {
+      function: { background: '#22c55e', border: '#16a34a', highlight: '#4ade80' },
+      method: { background: '#38bdf8', border: '#0284c7', highlight: '#7dd3fc' },
+      struct: { background: '#f43f5e', border: '#e11d48', highlight: '#fb7185' },
+      interface: { background: '#eab308', border: '#ca8a04', highlight: '#fde047' },
+      type: { background: '#a855f7', border: '#9333ea', highlight: '#c084fc' },
+      class: { background: '#ec4899', border: '#db2777', highlight: '#f472b6' },
+      package: { background: '#fb923c', border: '#ea580c', highlight: '#fdba74' },
+      default: { background: '#64748b', border: '#475569', highlight: '#94a3b8' }
+    };
+
+    function getCommunityColor(commId) {
+      const idx = ((commId || 1) - 1) % communityPalette.length;
+      return communityPalette[idx];
+    }
 
     async function triggerReindex() {
       const btn = event.target;
@@ -407,14 +489,20 @@ export function renderGraphHtml(projectId: string): string {
     function filterSymbols() {
       const q = (document.getElementById('symFilter').value || '').toLowerCase();
       const k = (document.getElementById('kindFilter').value || '').toLowerCase();
+      const c = document.getElementById('commFilter').value;
       let count = 0;
+
       document.querySelectorAll('.sym-item').forEach(el => {
         const name = el.getAttribute('data-name').toLowerCase();
         const file = el.getAttribute('data-file').toLowerCase();
         const kind = el.getAttribute('data-kind').toLowerCase();
+        const comm = el.getAttribute('data-comm');
+
         const matchQ = !q || name.includes(q) || file.includes(q);
         const matchK = !k || kind === k;
-        if (matchQ && matchK) {
+        const matchC = !c || comm === c;
+
+        if (matchQ && matchK && matchC) {
           el.style.display = '';
           count++;
         } else {
@@ -425,19 +513,34 @@ export function renderGraphHtml(projectId: string): string {
       if (counter) counter.innerText = count;
     }
 
-    function selectSymbol(name, kind, file, sig, doc, calls) {
+    function selectSymbol(name, kind, file, sig, doc, calls, commId, pr, deg, pkg) {
       document.querySelectorAll('.sym-item').forEach(el => el.classList.remove('active'));
       const target = Array.from(document.querySelectorAll('.sym-item')).find(el => el.getAttribute('data-name') === name);
       if (target) {
         target.classList.add('active');
         target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
+
       document.getElementById('insName').innerText = name;
       document.getElementById('insKind').innerText = kind;
       document.getElementById('insKind').className = 'sym-kind kind-' + kind;
+      
+      const cCol = getCommunityColor(commId);
+      const commEl = document.getElementById('insComm');
+      commEl.innerText = 'COMMUNITY #' + (commId || 1);
+      commEl.style.background = cCol.background;
+      commEl.style.color = '#000000';
+      commEl.style.fontWeight = '700';
+
       document.getElementById('insFile').innerText = file;
+      document.getElementById('metaComm').innerText = '#' + (commId || 1);
+      document.getElementById('metaPR').innerText = pr !== undefined ? pr : '-';
+      document.getElementById('metaDeg').innerText = deg !== undefined ? deg : '-';
+      document.getElementById('metaPkg').innerText = pkg || 'root';
+
       document.getElementById('insSig').innerText = sig || name;
       document.getElementById('insDoc').innerText = doc || 'No docstring comment provided.';
+
       const callList = Array.isArray(calls) ? calls : (calls ? calls.split(',').filter(Boolean) : []);
       if (callList.length > 0) {
         document.getElementById('insCalls').innerHTML = callList.map(c => '<span class="node-chip" onclick="jumpToNode(\\'' + c + '\\')">' + c + '</span>').join(' ');
@@ -457,7 +560,18 @@ export function renderGraphHtml(projectId: string): string {
         }
       }
       if (targetNode && networkInstance) {
-        selectSymbol(targetNode.label, targetNode.kind, targetNode.file, targetNode.signature, targetNode.doc, targetNode.calls);
+        selectSymbol(
+          targetNode.label,
+          targetNode.kind,
+          targetNode.file,
+          targetNode.signature,
+          targetNode.doc,
+          targetNode.calls,
+          targetNode.community_id,
+          targetNode.pagerank,
+          targetNode.degree,
+          targetNode.package
+        );
         networkInstance.selectNodes([targetNode.key]);
         networkInstance.focus(targetNode.key, {
           scale: 1.2,
@@ -466,36 +580,76 @@ export function renderGraphHtml(projectId: string): string {
       }
     };
 
+    function changeColorMode(mode) {
+      activeColorMode = mode;
+      if (!nodeDataSet) return;
+
+      const updates = currentRawData.nodes.map(n => {
+        let col;
+        if (mode === 'louvain') {
+          col = getCommunityColor(n.community_id);
+        } else {
+          col = kindColor[n.kind] || kindColor.default;
+        }
+        return {
+          id: n.key,
+          color: {
+            background: col.background,
+            border: col.border,
+            highlight: { background: col.highlight, border: '#ffffff' },
+            hover: { background: col.highlight, border: '#ffffff' }
+          }
+        };
+      });
+
+      nodeDataSet.update(updates);
+
+      // Update Legend
+      const legend = document.getElementById('graphLegend');
+      if (mode === 'louvain') {
+        legend.innerHTML = communityPalette.slice(0, 6).map((c, i) => \`
+          <span><span class="legend-dot" style="background:\${c.background}"></span>Cluster #\${i+1}</span>
+        \`).join('');
+      } else {
+        legend.innerHTML = \`
+          <span><span class="legend-dot" style="background:var(--fn)"></span>Function</span>
+          <span><span class="legend-dot" style="background:var(--method)"></span>Method</span>
+          <span><span class="legend-dot" style="background:var(--struct)"></span>Struct</span>
+          <span><span class="legend-dot" style="background:var(--class)"></span>Class</span>
+          <span><span class="legend-dot" style="background:var(--iface)"></span>Interface</span>
+          <span><span class="legend-dot" style="background:var(--type)"></span>Type</span>
+        \`;
+      }
+    }
+
     async function initGraph() {
       const container = document.getElementById('networkContainer');
-      let raw = { nodes: [], edges: [] };
       try {
         const response = await fetch('/api/graph?project=${encodeURIComponent(projectId)}');
-        raw = await response.json();
+        currentRawData = await response.json();
       } catch (e) {
-        raw = { nodes: [], edges: [] };
+        currentRawData = { nodes: [], edges: [] };
       }
 
-      const kindColor = {
-        function: { background: '#22c55e', border: '#16a34a', highlight: '#4ade80' },
-        method: { background: '#38bdf8', border: '#0284c7', highlight: '#7dd3fc' },
-        struct: { background: '#f43f5e', border: '#e11d48', highlight: '#fb7185' },
-        interface: { background: '#eab308', border: '#ca8a04', highlight: '#fde047' },
-        type: { background: '#a855f7', border: '#9333ea', highlight: '#c084fc' },
-        class: { background: '#ec4899', border: '#db2777', highlight: '#f472b6' },
-        package: { background: '#fb923c', border: '#ea580c', highlight: '#fdba74' },
-        default: { background: '#64748b', border: '#475569', highlight: '#94a3b8' }
-      };
-
+      const raw = currentRawData;
       const degree = {};
       raw.edges.forEach(e => {
         degree[e.source] = (degree[e.source] || 0) + 1;
         degree[e.target] = (degree[e.target] || 0) + 1;
       });
 
+      // Count distinct Louvain communities
+      const distinctComms = new Set(raw.nodes.map(n => n.community_id || 1));
       document.getElementById('nodeCount').innerText = raw.nodes.length;
       document.getElementById('edgeCount').innerText = raw.edges.length;
+      document.getElementById('commCount').innerText = distinctComms.size;
       document.getElementById('symFilteredCount').innerText = raw.nodes.length;
+
+      // Populate Community Filter
+      const commFilterSelect = document.getElementById('commFilter');
+      const commListSorted = Array.from(distinctComms).sort((a, b) => a - b);
+      commFilterSelect.innerHTML = '<option value="">All Communities</option>' + 
+        commListSorted.map(c => \`<option value="\${c}">Cluster #\${c}</option>\`).join('');
 
       nodeDataMap.clear();
       raw.nodes.forEach(n => nodeDataMap.set(n.key, n));
@@ -504,7 +658,7 @@ export function renderGraphHtml(projectId: string): string {
       const symListContainer = document.getElementById('symbolList');
       if (raw.nodes.length > 0) {
         symListContainer.innerHTML = raw.nodes.map(n => \`
-          <div class="sym-item" data-key="\${n.key}" data-name="\${n.label}" data-kind="\${n.kind}" data-file="\${n.file}">
+          <div class="sym-item" data-key="\${n.key}" data-name="\${n.label}" data-kind="\${n.kind}" data-comm="\${n.community_id || 1}" data-file="\${n.file}">
             <span class="sym-kind kind-\${n.kind}">\${n.kind}</span>
             <span class="sym-name">\${n.label}</span>
             <div class="sym-file">\${n.file}</div>
@@ -532,7 +686,7 @@ export function renderGraphHtml(projectId: string): string {
         return {
           id: n.key,
           label: n.label,
-          title: n.label + ' (' + n.kind + ' in ' + n.file + ')',
+          title: n.label + ' (' + n.kind + ' in ' + n.file + ') | Louvain Cluster #' + (n.community_id || 1),
           shape: 'dot',
           size: Math.min(30, Math.max(12, 12 + Math.sqrt(deg) * 3)),
           color: {
@@ -591,7 +745,18 @@ export function renderGraphHtml(projectId: string): string {
           const selectedId = params.nodes[0];
           const nodeData = nodeDataMap.get(selectedId);
           if (nodeData) {
-            selectSymbol(nodeData.label, nodeData.kind, nodeData.file, nodeData.signature, nodeData.doc, nodeData.calls);
+            selectSymbol(
+              nodeData.label,
+              nodeData.kind,
+              nodeData.file,
+              nodeData.signature,
+              nodeData.doc,
+              nodeData.calls,
+              nodeData.community_id,
+              nodeData.pagerank,
+              nodeData.degree,
+              nodeData.package
+            );
           }
         }
       });
