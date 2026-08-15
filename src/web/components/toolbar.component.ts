@@ -27,11 +27,5 @@ export function renderToolbar(projectId: string): string {
     <div id="codebaseActions" style="display:flex;gap:0.4rem">
       <button class="mac-btn" onclick="deleteCurrentDataset()" style="color:var(--mac-red);border-color:rgba(255,69,58,0.3)">Delete Dataset</button>
     </div>
-
-    <!-- Memory Actions -->
-    <div id="memoryActions" style="display:none;gap:0.4rem">
-      <button class="mac-btn" onclick="promptNewObservation()">Log Episode</button>
-      <button class="mac-btn mac-btn-primary" onclick="promptNewMemory()">Commit Memory</button>
-    </div>
   </div>`;
 }
