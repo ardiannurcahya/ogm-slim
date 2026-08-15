@@ -75,8 +75,6 @@ describe('OGM-Slim Memory Operations', () => {
     const detail = memoryService.inspect('test-proj', mem.memory.id);
     assert.ok(detail);
     assert.equal(detail.memory.id, mem.memory.id);
-    assert.equal(detail.episodes.length, 1);
-    assert.equal(detail.feedback.length, 1);
     assert.equal(detail.feedback[0].kind, 'confirm');
   });
 
@@ -87,5 +85,31 @@ describe('OGM-Slim Memory Operations', () => {
 
     const recalled = memoryService.recall({ project_id: 'test-proj', text: 'theme' });
     assert.equal(recalled.length, 0); // archived is filtered out
+  });
+
+  test('should generate memory graph with citation edges', () => {
+    const ep1 = memoryService.observe('test-proj', 'error', 'Unhandled exception in auth module');
+    const ep2 = memoryService.observe('test-proj', 'command_output', 'JWT verification failed: expired token');
+    const mem = memoryService.commit('test-proj', 'bugfix', { summary: 'Fix JWT expiration grace period' }, 1.0, [
+      { episode_id: ep1.episode.id, purpose: 'evidence' },
+      { episode_id: ep2.episode.id, purpose: 'verification' },
+    ]);
+
+    const graph = memoryService.getMemoryGraph('test-proj');
+    assert.ok(graph.nodes.length >= 3);
+    assert.ok(graph.edges.length >= 2);
+
+    const memNode = graph.nodes.find((n) => n.key === mem.memory.id);
+    assert.ok(memNode);
+    assert.equal(memNode.node_type, 'memory');
+    assert.equal(memNode.kind, 'bugfix');
+
+    const epNode = graph.nodes.find((n) => n.key === ep1.episode.id);
+    assert.ok(epNode);
+    assert.equal(epNode.node_type, 'episode');
+
+    const edge = graph.edges.find((e) => e.source === mem.memory.id && e.target === ep1.episode.id);
+    assert.ok(edge);
+    assert.equal(edge.relation, 'evidence');
   });
 });

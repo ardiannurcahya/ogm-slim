@@ -9,6 +9,7 @@ export interface OgmSlimConfig {
     auto_migrate: boolean;
   };
   auth: {
+    enabled?: boolean;
     default_project_id: string;
     api_key: string;
     admin_email?: string;

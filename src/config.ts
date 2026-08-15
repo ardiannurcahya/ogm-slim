@@ -29,6 +29,7 @@ export function getDefaultConfig(): OgmLwConfig {
       auto_migrate: true,
     },
     auth: {
+      enabled: false,
       default_project_id: 'default',
       api_key: 'ogm-slim-admin-secret-key-local',
       admin_email: 'admin@local',
@@ -94,6 +95,10 @@ export function loadConfig(customConfigPath?: string): OgmLwConfig {
 
   if (process.env.OGM_API_KEY) config.auth.api_key = process.env.OGM_API_KEY;
   if (process.env.MEMORY_MCP_CREDENTIAL) config.auth.api_key = process.env.MEMORY_MCP_CREDENTIAL;
+  if (process.env.OGM_ADMIN_PASSWORD) config.auth.admin_password = process.env.OGM_ADMIN_PASSWORD;
+  if (process.env.OGM_AUTH_ENABLED) {
+    config.auth.enabled = process.env.OGM_AUTH_ENABLED === 'true' || process.env.OGM_AUTH_ENABLED === '1';
+  }
 
   // Ensure DB parent directory exists
   const dbDir = path.dirname(config.database.path);

@@ -28,11 +28,17 @@ program
   .option('-c, --config <string>', 'Path to config JSON file')
   .option('--project <string>', 'Default project ID', 'default')
   .option('--dataset <string>', 'Dataset name to auto-index', 'ogm-slim')
+  .option('--auth', 'Enable simple authentication for Webview & REST API')
+  .option('--api-key <string>', 'Set API key for authentication')
+  .option('--password <string>', 'Set admin password for Webview login')
   .action(async (options) => {
     const config = loadConfig(options.config);
     if (options.port) config.server.port = parseInt(options.port, 10);
     if (options.host) config.server.host = options.host;
     if (options.project) config.auth.default_project_id = options.project;
+    if (options.apiKey) config.auth.api_key = options.apiKey;
+    if (options.password) config.auth.admin_password = options.password;
+    if (options.auth) config.auth.enabled = true;
 
     const dbManager = new DatabaseManager(config.database.path, config.database.auto_migrate);
     const rawDb = dbManager.getRawDb();

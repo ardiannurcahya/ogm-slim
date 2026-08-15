@@ -1,8 +1,40 @@
-import { Hono } from 'hono';
+import { Context, Hono } from 'hono';
+import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { MemoryService } from '../../services/memory.service.js';
 import { CodebaseService } from '../../services/codebase.service.js';
 import { AppConfig } from '../../types/config.js';
 import { renderGraphPage } from '../views/graph.view.js';
+
+function isAuthenticated(c: Context, config: AppConfig): boolean {
+  if (!config.auth.enabled) return true;
+
+  const authHeader = c.req.header('Authorization');
+  if (authHeader) {
+    if (authHeader.startsWith('Bearer ')) {
+      const token = authHeader.slice(7).trim();
+      if (token === config.auth.api_key || (config.auth.admin_password && token === config.auth.admin_password)) {
+        return true;
+      }
+    }
+  }
+
+  const apiKeyHeader = c.req.header('X-API-Key') || c.req.header('x-api-key');
+  if (apiKeyHeader && (apiKeyHeader === config.auth.api_key || (config.auth.admin_password && apiKeyHeader === config.auth.admin_password))) {
+    return true;
+  }
+
+  const cookieToken = getCookie(c, 'ogm_auth_token');
+  if (cookieToken && (cookieToken === config.auth.api_key || (config.auth.admin_password && cookieToken === config.auth.admin_password))) {
+    return true;
+  }
+
+  const queryToken = c.req.query('key') || c.req.query('token');
+  if (queryToken && (queryToken === config.auth.api_key || (config.auth.admin_password && queryToken === config.auth.admin_password))) {
+    return true;
+  }
+
+  return false;
+}
 
 export function registerApiRoutes(
   app: Hono,
@@ -10,20 +42,67 @@ export function registerApiRoutes(
   codebaseService: CodebaseService,
   config: AppConfig
 ): void {
-  // System Health
+  // System Health (Public)
   app.get('/health', (c) => {
-    return c.json({ status: 'ok', service: 'ogm-slim', version: '1.0.0' });
+    return c.json({ status: 'ok', service: 'ogm-slim', version: '1.0.0', auth_enabled: !!config.auth.enabled });
+  });
+
+  // Auth Status & Login / Logout
+  app.get('/api/auth/status', (c) => {
+    return c.json({
+      auth_enabled: !!config.auth.enabled,
+      authenticated: isAuthenticated(c, config),
+    });
+  });
+
+  app.post('/api/auth/login', async (c) => {
+    const body = await c.req.json().catch(() => ({}));
+    const key = body.key || body.api_key || body.password;
+
+    const validKey = config.auth.api_key;
+    const validPass = config.auth.admin_password;
+
+    if (key && (key === validKey || (validPass && key === validPass))) {
+      setCookie(c, 'ogm_auth_token', key, {
+        path: '/',
+        httpOnly: false,
+        sameSite: 'Lax',
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+      });
+      return c.json({ success: true, token: key });
+    }
+
+    return c.json({ success: false, error: 'Invalid API key or password' }, 401);
+  });
+
+  app.post('/api/auth/logout', (c) => {
+    deleteCookie(c, 'ogm_auth_token', { path: '/' });
+    return c.json({ success: true });
   });
 
   // Admin Web UI
   app.get('/admin', (c) => {
     const projectId = c.req.query('project') || config.auth.default_project_id;
-    return c.html(renderGraphPage(projectId));
+    return c.html(renderGraphPage(projectId, !!config.auth.enabled));
   });
 
   app.get('/graph', (c) => {
     const projectId = c.req.query('project') || config.auth.default_project_id;
-    return c.html(renderGraphPage(projectId));
+    return c.html(renderGraphPage(projectId, !!config.auth.enabled));
+  });
+
+  // API Middleware for protected routes
+  app.use('/api/*', async (c, next) => {
+    const path = c.req.path;
+    if (path === '/api/auth/login' || path === '/api/auth/status' || path === '/api/auth/logout') {
+      return next();
+    }
+
+    if (!isAuthenticated(c, config)) {
+      return c.json({ error: 'Unauthorized. Please provide valid API key or login.' }, 401);
+    }
+
+    await next();
   });
 
   // Datasets List
@@ -33,7 +112,7 @@ export function registerApiRoutes(
     return c.json(datasets);
   });
 
-  // Graph Data
+  // Codebase Graph Data
   app.get('/api/graph', (c) => {
     const projectId = c.req.query('project') || config.auth.default_project_id;
     const dataset = c.req.query('dataset');
@@ -41,7 +120,14 @@ export function registerApiRoutes(
     return c.json(data);
   });
 
-  // Memory Stats
+  // Agent Memory Graph Data (New Feature)
+  app.get('/api/memory/graph', (c) => {
+    const projectId = c.req.query('project') || config.auth.default_project_id;
+    const data = memoryService.getMemoryGraph(projectId);
+    return c.json(data);
+  });
+
+  // Memory & Codebase Stats
   app.get('/api/stats', (c) => {
     const projectId = c.req.query('project') || config.auth.default_project_id;
     const stats = memoryService.getStats(projectId);
@@ -136,7 +222,7 @@ export function registerApiRoutes(
     return c.json(result);
   });
 
-  // Memory Recall (Support both POST and GET for convenience)
+  // Memory Recall (Support both POST and GET)
   app.post('/api/memory/recall', async (c) => {
     const body = await c.req.json();
     const projectId = body.project_id || config.auth.default_project_id;

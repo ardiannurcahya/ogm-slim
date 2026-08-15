@@ -65,4 +65,8 @@ export class MemoryService {
   public getStats(projectId: string) {
     return this.memoryRepo.getStats(projectId);
   }
+
+  public getMemoryGraph(projectId: string) {
+    return this.memoryRepo.getMemoryGraphData(projectId);
+  }
 }

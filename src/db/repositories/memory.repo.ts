@@ -311,4 +311,92 @@ export class MemoryRepository {
       symbols_count: symCount,
     };
   }
+
+  public getMemoryGraphData(projectId: string) {
+    const memories = this.db
+      .prepare('SELECT id, type, content, confidence, status, origin_ids, created_at, updated_at FROM memories WHERE project_id = ? ORDER BY created_at DESC LIMIT 500')
+      .all(projectId) as any[];
+
+    const episodes = this.db
+      .prepare('SELECT id, kind, observation, metadata, observed_at, created_at FROM episodes WHERE project_id = ? ORDER BY created_at DESC LIMIT 500')
+      .all(projectId) as any[];
+
+    const references = this.db
+      .prepare(`
+        SELECT mr.memory_id, mr.episode_id, mr.purpose
+        FROM memory_references mr
+        JOIN memories m ON m.id = mr.memory_id
+        WHERE m.project_id = ?
+      `)
+      .all(projectId) as any[];
+
+    const nodes = [
+      ...memories.map((m) => {
+        let parsedContent: any = {};
+        try {
+          parsedContent = JSON.parse(m.content);
+        } catch {}
+
+        const label =
+          parsedContent.summary ||
+          parsedContent.title ||
+          parsedContent.decision ||
+          parsedContent.name ||
+          `${m.type}: ${m.id.slice(0, 10)}`;
+
+        return {
+          key: m.id,
+          label: String(label).slice(0, 45),
+          kind: m.type,
+          node_type: 'memory',
+          confidence: m.confidence,
+          status: m.status,
+          created_at: m.created_at,
+          updated_at: m.updated_at,
+          content: parsedContent,
+          origin_ids: JSON.parse(m.origin_ids || '[]'),
+          degree: 1,
+        };
+      }),
+      ...episodes.map((e) => {
+        let parsedObs: any = {};
+        let parsedMeta: any = {};
+        try {
+          parsedObs = JSON.parse(e.observation);
+        } catch {
+          parsedObs = e.observation;
+        }
+        try {
+          parsedMeta = JSON.parse(e.metadata);
+        } catch {}
+
+        let obsText = '';
+        if (typeof parsedObs === 'string') {
+          obsText = parsedObs;
+        } else if (parsedObs && typeof parsedObs === 'object') {
+          obsText = parsedObs.summary || parsedObs.command || parsedObs.stdout || parsedObs.error || JSON.stringify(parsedObs);
+        }
+
+        return {
+          key: e.id,
+          label: `${e.kind}: ${obsText.slice(0, 35)}`,
+          kind: e.kind,
+          node_type: 'episode',
+          observed_at: e.observed_at,
+          created_at: e.created_at,
+          observation: parsedObs,
+          metadata: parsedMeta,
+          degree: 1,
+        };
+      }),
+    ];
+
+    const edges = references.map((r) => ({
+      source: r.memory_id,
+      target: r.episode_id,
+      relation: r.purpose || 'evidence',
+    }));
+
+    return { nodes, edges };
+  }
 }

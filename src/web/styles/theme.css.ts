@@ -515,6 +515,94 @@ export const themeCss = `
     border-color: #0071e3;
   }
 
+  /* Tab Switcher */
+  .mac-tabs {
+    display: inline-flex;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--mac-border);
+    border-radius: 7px;
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .mac-tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--mac-text-secondary);
+    padding: 0.28rem 0.75rem;
+    border-radius: 5px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.15s ease;
+  }
+
+  .mac-tab-btn:hover {
+    color: var(--mac-text);
+  }
+
+  .mac-tab-btn.active {
+    background: var(--mac-accent);
+    color: #ffffff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Memory Badges */
+  .mac-badge-bugfix { background: rgba(255, 69, 58, 0.25); color: var(--mac-red); }
+  .mac-badge-decision { background: rgba(10, 132, 255, 0.25); color: var(--mac-blue); }
+  .mac-badge-procedure { background: rgba(48, 209, 88, 0.25); color: var(--mac-green); }
+  .mac-badge-research { background: rgba(191, 90, 242, 0.25); color: var(--mac-purple); }
+  .mac-badge-learning { background: rgba(255, 214, 10, 0.25); color: var(--mac-yellow); }
+  .mac-badge-preference { background: rgba(255, 55, 95, 0.25); color: var(--mac-pink); }
+  .mac-badge-episode { background: rgba(100, 210, 255, 0.2); color: var(--mac-teal); border: 1px dashed rgba(100, 210, 255, 0.4); }
+
+  /* Login Modal */
+  .mac-login-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10, 10, 14, 0.85);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+
+  .mac-login-card {
+    background: #1c1c23;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 2rem;
+    width: 360px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+
+  .mac-login-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--mac-text);
+  }
+
+  .mac-login-error {
+    background: rgba(255, 69, 58, 0.15);
+    border: 1px solid var(--mac-red);
+    color: var(--mac-red);
+    padding: 0.5rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    display: none;
+  }
+
   @media (max-width: 64rem) {
     .mac-layout { grid-template-columns: 1fr; height: auto; }
     #networkContainer { min-height: 50vh; position: relative; }
