@@ -484,6 +484,54 @@ export const themeCss = `
     min-width: 0;
   }
 
+  /* Sidebar Edge Handle Arrow Tabs */
+  .mac-edge-handle {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 25;
+    width: 22px;
+    height: 48px;
+    background: rgba(26, 26, 34, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--mac-border);
+    color: var(--mac-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    touch-action: manipulation;
+  }
+
+  .mac-edge-handle:hover {
+    background: var(--mac-blue);
+    border-color: #0071e3;
+    color: #ffffff;
+    width: 26px;
+    box-shadow: 0 0 12px rgba(10, 132, 255, 0.4);
+  }
+
+  .mac-edge-left {
+    left: 0;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    border-left: none;
+  }
+
+  .mac-edge-right {
+    right: 0;
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-right: none;
+  }
+
+  .mac-chevron-icon {
+    transition: transform 0.22s ease;
+  }
+
   #networkContainer {
     width: 100%;
     height: 100%;

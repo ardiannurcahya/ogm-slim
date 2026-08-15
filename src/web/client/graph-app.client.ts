@@ -410,6 +410,24 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
       }
     }
 
+    function updateHandleIcons() {
+      const isMobile = window.innerWidth <= 960;
+      const leftCol = document.getElementById('explorerCol');
+      const rightCol = document.getElementById('inspectorCol');
+      const iconLeft = document.getElementById('iconHandleLeft');
+      const iconRight = document.getElementById('iconHandleRight');
+
+      const isLeftOpen = isMobile ? (leftCol && leftCol.classList.contains('open')) : (leftCol && !leftCol.classList.contains('collapsed'));
+      const isRightOpen = isMobile ? (rightCol && rightCol.classList.contains('open')) : (rightCol && !rightCol.classList.contains('collapsed'));
+
+      if (iconLeft) {
+        iconLeft.style.transform = isLeftOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+      }
+      if (iconRight) {
+        iconRight.style.transform = isRightOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+      }
+    }
+
     window.toggleSidebar = function(side) {
       const isMobile = window.innerWidth <= 960;
       const backdrop = document.getElementById('drawerBackdrop');
@@ -473,6 +491,7 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
           }, 240);
         }
       }
+      updateHandleIcons();
     };
 
     window.closeAllDrawers = function() {
@@ -486,6 +505,7 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
       if (btnExplorer) btnExplorer.classList.remove('active');
       if (btnInspector) btnInspector.classList.remove('active');
       if (backdrop) backdrop.classList.remove('active');
+      updateHandleIcons();
     };
 
     window.jumpToNode = function(nodeLabelOrKey) {
@@ -812,6 +832,7 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
           networkInstance.fit({ animation: { duration: 350 } });
         }
       });
+      updateHandleIcons();
     }
 
     window.addEventListener('DOMContentLoaded', initGraph);

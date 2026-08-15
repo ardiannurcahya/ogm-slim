@@ -1,6 +1,20 @@
 export function renderGraphCanvas(): string {
   return `
   <div class="mac-graph-view">
+    <!-- Left Sidebar Collapse/Expand Handle -->
+    <button class="mac-edge-handle mac-edge-left" id="handleLeft" onclick="toggleSidebar('explorer')" title="Toggle Explorer Sidebar" aria-label="Toggle Explorer Sidebar">
+      <svg id="iconHandleLeft" class="mac-chevron-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+
+    <!-- Right Inspector Collapse/Expand Handle -->
+    <button class="mac-edge-handle mac-edge-right" id="handleRight" onclick="toggleSidebar('inspector')" title="Toggle Details Panel" aria-label="Toggle Details Panel">
+      <svg id="iconHandleRight" class="mac-chevron-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    </button>
+
     <div class="mac-floating-hud">
       <button class="mac-hud-btn" id="btnZoomIn" title="Zoom In">+</button>
       <button class="mac-hud-btn" id="btnZoomOut" title="Zoom Out">&minus;</button>
