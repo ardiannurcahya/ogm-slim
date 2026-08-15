@@ -54,6 +54,15 @@ export const themeCss = `
     background: rgba(255, 255, 255, 0.3);
   }
 
+  ::selection {
+    background: #0a84ff;
+    color: #ffffff;
+  }
+  ::-moz-selection {
+    background: #0a84ff;
+    color: #ffffff;
+  }
+
   html, body {
     height: 100%;
     width: 100%;
@@ -61,7 +70,7 @@ export const themeCss = `
   }
 
   body {
-    font: 13px/1.45 var(--mac-font);
+    font: 13px/1.5 var(--mac-font);
     background: var(--mac-bg);
     color: var(--mac-text);
     display: flex;
@@ -69,7 +78,6 @@ export const themeCss = `
     letter-spacing: -0.01em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    user-select: none;
   }
 
   /* Top Titlebar */
@@ -413,9 +421,9 @@ export const themeCss = `
   }
 
   .mac-sym-item.active {
-    background: var(--mac-accent);
-    color: #ffffff;
-    border-color: var(--mac-accent);
+    background: rgba(10, 132, 255, 0.18);
+    border-color: rgba(10, 132, 255, 0.7);
+    border-left: 3.5px solid #0a84ff;
   }
 
   .mac-sym-top {
@@ -429,6 +437,7 @@ export const themeCss = `
     font-weight: 600;
     font-family: var(--mac-mono);
     font-size: 0.82rem;
+    color: #f1f5f9;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -436,22 +445,28 @@ export const themeCss = `
     min-width: 0;
   }
 
+  .mac-sym-item.active .mac-sym-name {
+    color: #ffffff;
+    font-weight: 700;
+  }
+
   .mac-sym-file {
-    font-size: 0.72rem;
-    color: var(--mac-text-muted);
+    font-size: 0.73rem;
+    color: #94a3b8;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    padding-left: 2px;
   }
 
   .mac-sym-item.active .mac-sym-file {
-    color: rgba(255, 255, 255, 0.8);
+    color: #cbd5e1;
   }
 
   .mac-badge {
     font-size: 0.65rem;
     font-weight: 700;
-    padding: 0.1rem 0.35rem;
+    padding: 0.12rem 0.4rem;
     border-radius: 4px;
     text-transform: uppercase;
     letter-spacing: 0.03em;
@@ -459,17 +474,19 @@ export const themeCss = `
     flex-shrink: 0;
   }
 
-  .mac-badge-fn { background: rgba(48, 209, 88, 0.2); color: var(--mac-green); }
-  .mac-badge-method { background: rgba(100, 210, 255, 0.2); color: var(--mac-teal); }
-  .mac-badge-struct { background: rgba(255, 69, 58, 0.2); color: var(--mac-red); }
-  .mac-badge-iface { background: rgba(255, 214, 10, 0.2); color: var(--mac-yellow); }
-  .mac-badge-type { background: rgba(191, 90, 242, 0.2); color: var(--mac-purple); }
-  .mac-badge-class { background: rgba(255, 55, 95, 0.2); color: var(--mac-pink); }
-
-  .mac-sym-item.active .mac-badge {
-    background: rgba(255, 255, 255, 0.25);
-    color: #ffffff;
-  }
+  .mac-badge-fn { background: rgba(48, 209, 88, 0.25); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); }
+  .mac-badge-method { background: rgba(56, 189, 248, 0.25); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+  .mac-badge-struct { background: rgba(248, 113, 113, 0.25); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
+  .mac-badge-iface { background: rgba(250, 204, 21, 0.25); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.3); }
+  .mac-badge-type { background: rgba(192, 132, 252, 0.25); color: #c084fc; border: 1px solid rgba(192, 132, 252, 0.3); }
+  .mac-badge-class { background: rgba(251, 113, 133, 0.25); color: #fb7185; border: 1px solid rgba(251, 113, 133, 0.3); }
+  .mac-badge-bugfix { background: rgba(239, 68, 68, 0.25); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
+  .mac-badge-decision { background: rgba(14, 165, 233, 0.25); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+  .mac-badge-procedure { background: rgba(34, 197, 94, 0.25); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); }
+  .mac-badge-learning { background: rgba(234, 179, 8, 0.25); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.3); }
+  .mac-badge-research { background: rgba(168, 85, 247, 0.25); color: #c084fc; border: 1px solid rgba(192, 132, 252, 0.3); }
+  .mac-badge-preference { background: rgba(244, 63, 94, 0.25); color: #fb7185; border: 1px solid rgba(251, 113, 133, 0.3); }
+  .mac-badge-episode { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px dashed rgba(56, 189, 248, 0.4); }
 
   /* Center Graph Canvas */
   .mac-graph-view {
@@ -659,34 +676,37 @@ export const themeCss = `
   }
 
   .mac-code-panel {
-    background: #09090c;
-    border: 1px solid var(--mac-border);
+    background: #090a0f;
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 8px;
-    padding: 0.65rem;
+    padding: 0.75rem 0.85rem;
     font-family: var(--mac-mono);
-    font-size: 0.78rem;
-    color: var(--mac-teal);
+    font-size: 0.82rem;
+    color: #7dd3fc;
     white-space: pre-wrap;
     word-break: break-all;
     overflow-wrap: anywhere;
-    line-height: 1.45;
-    max-height: 220px;
+    line-height: 1.55;
+    max-height: 240px;
     overflow-y: auto;
     overflow-x: auto;
+    user-select: text;
   }
 
   .mac-doc-panel {
-    background: rgba(0, 0, 0, 0.25);
-    border-left: 3px solid var(--mac-blue);
-    border-radius: 4px;
-    padding: 0.6rem 0.7rem;
-    font-size: 0.8rem;
-    color: var(--mac-text-secondary);
-    line-height: 1.45;
+    background: rgba(18, 20, 29, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 3.5px solid #0a84ff;
+    border-radius: 6px;
+    padding: 0.75rem 0.85rem;
+    font-size: 0.84rem;
+    color: #f1f5f9;
+    line-height: 1.6;
     word-break: break-word;
     overflow-wrap: anywhere;
-    max-height: 180px;
+    max-height: 200px;
     overflow-y: auto;
+    user-select: text;
   }
 
   .mac-chip {

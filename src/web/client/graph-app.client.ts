@@ -27,25 +27,25 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
     ];
 
     const macKindColor = {
-      function: { background: '#30d158', border: '#24a148', highlight: '#6be585' },
-      method: { background: '#64d2ff', border: '#33b1e6', highlight: '#99e0ff' },
-      struct: { background: '#ff453a', border: '#d62d24', highlight: '#ff6961' },
-      interface: { background: '#ffd60a', border: '#cca700', highlight: '#ffe047' },
-      type: { background: '#bf5af2', border: '#9e3fe0', highlight: '#da8fff' },
-      class: { background: '#ff375f', border: '#d62045', highlight: '#ff6685' },
-      package: { background: '#ff9f0a', border: '#cc7a00', highlight: '#ffb340' },
-      default: { background: '#8e8e93', border: '#636366', highlight: '#aeaeb2' }
+      function: { background: '#30d158', border: '#24a148', highlight: { background: '#30d158', border: '#ffffff' } },
+      method: { background: '#64d2ff', border: '#33b1e6', highlight: { background: '#64d2ff', border: '#ffffff' } },
+      struct: { background: '#ff453a', border: '#d62d24', highlight: { background: '#ff453a', border: '#ffffff' } },
+      interface: { background: '#ffd60a', border: '#cca700', highlight: { background: '#ffd60a', border: '#ffffff' } },
+      type: { background: '#bf5af2', border: '#9e3fe0', highlight: { background: '#bf5af2', border: '#ffffff' } },
+      class: { background: '#ff375f', border: '#d62045', highlight: { background: '#ff375f', border: '#ffffff' } },
+      package: { background: '#ff9f0a', border: '#cc7a00', highlight: { background: '#ff9f0a', border: '#ffffff' } },
+      default: { background: '#8e8e93', border: '#636366', highlight: { background: '#8e8e93', border: '#ffffff' } }
     };
 
     const memoryColors = {
-      bugfix: { background: '#241014', border: '#ff453a', highlight: '#ff6961' },
-      decision: { background: '#0e1c2e', border: '#0a84ff', highlight: '#64d2ff' },
-      procedure: { background: '#0e2417', border: '#30d158', highlight: '#6be585' },
-      research: { background: '#21122e', border: '#bf5af2', highlight: '#da8fff' },
-      learning: { background: '#26200a', border: '#ffd60a', highlight: '#ffe047' },
-      preference: { background: '#260f1b', border: '#ff375f', highlight: '#ff6685' },
-      episode: { background: '#111827', border: '#38bdf8', highlight: '#7dd3fc' },
-      default: { background: '#181824', border: '#8e8e93', highlight: '#aeaeb2' }
+      bugfix: { background: '#220d11', border: '#ff453a', highlight: { background: '#3b1218', border: '#ffffff' } },
+      decision: { background: '#0b1929', border: '#0a84ff', highlight: { background: '#112b4d', border: '#ffffff' } },
+      procedure: { background: '#0b2014', border: '#30d158', highlight: { background: '#133522', border: '#ffffff' } },
+      research: { background: '#1b0d26', border: '#bf5af2', highlight: { background: '#301545', border: '#ffffff' } },
+      learning: { background: '#211a06', border: '#ffd60a', highlight: { background: '#382c0b', border: '#ffffff' } },
+      preference: { background: '#210b17', border: '#ff375f', highlight: { background: '#3b1127', border: '#ffffff' } },
+      episode: { background: '#0f172a', border: '#38bdf8', highlight: { background: '#1e293b', border: '#ffffff' } },
+      default: { background: '#14141e', border: '#8e8e93', highlight: { background: '#242433', border: '#ffffff' } }
     };
 
     function getCommunityColor(commId) {
@@ -658,7 +658,14 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
             highlight: { background: col.highlight, border: '#ffffff' },
             hover: { background: col.highlight, border: '#ffffff' }
           },
-          font: { color: '#f5f5f7', size: 11, face: '"SF Mono", monospace' },
+          font: {
+            color: '#f8fafc',
+            size: 11.5,
+            face: '"JetBrains Mono", "SF Mono", monospace',
+            strokeWidth: 3,
+            strokeColor: '#000000',
+            vadjust: 0
+          },
           borderWidth: 1.5,
           shadow: { enabled: true, color: 'rgba(0,0,0,0.4)', size: 4, x: 1, y: 1 }
         };
