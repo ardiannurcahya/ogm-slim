@@ -977,13 +977,12 @@ export const themeCss = `
     }
     .mac-toolbar::-webkit-scrollbar { display: none; }
 
-    /* Hide non-essential status pills on mobile to avoid clutter */
-    #codebaseStatusPills .mac-pill:nth-child(2),
-    #codebaseStatusPills .mac-pill:nth-child(4),
-    #codebaseStatusPills .mac-pill:nth-child(5),
-    #memoryStatusPills .mac-pill:nth-child(1),
-    #memoryStatusPills .mac-pill:nth-child(4) {
+    /* Hide metric pills from top toolbar on mobile (already floating at bottom capsule) */
+    #codebaseStatusPills .mac-pill:not(:first-child) {
       display: none;
+    }
+    #memoryStatusPills {
+      display: none !important;
     }
 
     /* Minimal Floating HUD on mobile: keep only Fit & Palette */
