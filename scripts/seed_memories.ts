@@ -103,8 +103,8 @@ const ep7 = insertEpisode(
 const ep8 = insertEpisode(
   'ep_systemd_caddy_deploy',
   'command_output',
-  'Systemd service ogm-slim.service running on port 8765 reverse proxied by Caddy on ogm-slim.svclabs.cloud with automatic Let\'s Encrypt TLS certificate.',
-  { service: 'ogm-slim.service', domain: 'ogm-slim.svclabs.cloud', tls: 'Let\'s Encrypt ALPN' },
+  'Systemd service ogm-slim.service running on port 8765 reverse proxied by Caddy with automatic TLS certificate.',
+  { service: 'ogm-slim.service', domain: 'app.internal.local', tls: 'Let\'s Encrypt ALPN' },
   '2026-08-15T16:30:00Z'
 );
 
@@ -226,7 +226,7 @@ insertMemory(
       '2. Start systemd service: systemctl restart ogm-slim',
       '3. Configure Caddyfile with reverse_proxy 127.0.0.1:8765',
       '4. Reload Caddy: systemctl reload caddy',
-      '5. Verify HTTPS endpoint on ogm-slim.svclabs.cloud'
+      '5. Verify HTTPS endpoint on 127.0.0.1:8765'
     ]
   },
   0.99,
