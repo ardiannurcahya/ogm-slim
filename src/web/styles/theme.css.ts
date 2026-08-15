@@ -922,7 +922,7 @@ export const themeCss = `
 
     .mac-titlebar {
       padding: 0.35rem 0.5rem;
-      min-height: 40px;
+      min-height: 38px;
     }
 
     .mac-tab-btn {
@@ -933,26 +933,53 @@ export const themeCss = `
     .mac-toolbar {
       padding: 0.25rem 0.5rem;
       font-size: 0.72rem;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .mac-toolbar::-webkit-scrollbar { display: none; }
+
+    /* Hide non-essential status pills on mobile to avoid clutter */
+    #codebaseStatusPills .mac-pill:nth-child(2),
+    #codebaseStatusPills .mac-pill:nth-child(4),
+    #codebaseStatusPills .mac-pill:nth-child(5),
+    #memoryStatusPills .mac-pill:nth-child(1),
+    #memoryStatusPills .mac-pill:nth-child(4) {
+      display: none;
+    }
+
+    /* Minimal Floating HUD on mobile: keep only Fit & Palette */
+    #btnZoomIn,
+    #btnZoomOut,
+    #btnRelayout,
+    #btnExportPng {
+      display: none;
     }
 
     .mac-floating-hud {
-      top: 0.5rem;
-      left: 0.5rem;
-      padding: 0.25rem 0.35rem;
-      gap: 0.2rem;
+      top: 0.4rem;
+      left: 0.4rem;
+      padding: 0.2rem 0.35rem;
+      gap: 0.25rem;
     }
 
     .mac-hud-btn {
-      padding: 0.2rem 0.4rem;
+      padding: 0.2rem 0.45rem;
       font-size: 0.72rem;
     }
 
+    /* Hide bottom legend on small mobile to maximize clean visual area */
     .mac-legend-hud {
-      bottom: 0.5rem;
-      left: 0.5rem;
-      padding: 0.25rem 0.5rem;
-      font-size: 0.68rem;
-      gap: 0.4rem;
+      display: none;
+    }
+
+    /* Sleek compact edge handles on mobile */
+    .mac-edge-handle {
+      width: 18px;
+      height: 40px;
+    }
+    .mac-edge-handle:hover {
+      width: 20px;
     }
 
     .mac-meta-card {
