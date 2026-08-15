@@ -112,6 +112,22 @@ export function registerApiRoutes(
     return c.json(datasets);
   });
 
+  // Delete Dataset
+  app.delete('/api/datasets/:id', (c) => {
+    const projectId = c.req.query('project') || config.auth.default_project_id;
+    const datasetId = c.req.param('id');
+    const success = codebaseService.deleteDataset(projectId, datasetId);
+    return c.json({ success, dataset_id: datasetId });
+  });
+
+  app.delete('/api/datasets', (c) => {
+    const projectId = c.req.query('project') || config.auth.default_project_id;
+    const datasetId = c.req.query('id') || c.req.query('name');
+    if (!datasetId) return c.json({ error: 'Missing dataset id or name' }, 400);
+    const success = codebaseService.deleteDataset(projectId, datasetId);
+    return c.json({ success, dataset_id: datasetId });
+  });
+
   // Codebase Graph Data
   app.get('/api/graph', (c) => {
     const projectId = c.req.query('project') || config.auth.default_project_id;

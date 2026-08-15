@@ -89,6 +89,23 @@ export class CodebaseRepository {
     };
   }
 
+  public deleteDataset(projectId: string, datasetIdOrName: string): boolean {
+    const ds = this.db
+      .prepare('SELECT id FROM datasets WHERE project_id = ? AND (id = ? OR name = ?)')
+      .get(projectId, datasetIdOrName, datasetIdOrName) as any;
+    if (!ds) return false;
+
+    const tx = this.db.transaction(() => {
+      this.db.prepare('DELETE FROM symbol_edges WHERE project_id = ? AND dataset_id = ?').run(projectId, ds.id);
+      this.db.prepare('DELETE FROM symbols WHERE project_id = ? AND dataset_id = ?').run(projectId, ds.id);
+      this.db.prepare('DELETE FROM codebase_files WHERE project_id = ? AND dataset_id = ?').run(projectId, ds.id);
+      this.db.prepare('DELETE FROM datasets WHERE project_id = ? AND id = ?').run(projectId, ds.id);
+    });
+
+    tx();
+    return true;
+  }
+
   public saveSymbolsBatch(
     projectId: string,
     datasetId: string,

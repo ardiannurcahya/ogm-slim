@@ -195,49 +195,34 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
       await fetchAndRenderGraph();
     };
 
-    window.triggerReindex = async function() {
-      const btn = event.target;
-      btn.innerText = '⏳ Indexing...';
-      btn.disabled = true;
-      try {
-        const res = await apiFetch('/api/codebase/index', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ path: '.', dataset: currentDatasetId })
-        });
-        const data = await res.json();
-        alert('Dataset indexing complete: ' + data.filesIndexed + ' files, ' + data.symbolsCount + ' symbols in ' + data.durationMs + 'ms');
-        await loadDatasets();
-        await fetchAndRenderGraph();
-      } catch (err) {
-        alert('Indexing error: ' + err.message);
-      } finally {
-        btn.innerText = '⚡ Re-Index Dataset';
-        btn.disabled = false;
+    window.deleteCurrentDataset = async function() {
+      const select = document.getElementById('datasetSelect');
+      const selectedOption = select.options[select.selectedIndex];
+      const datasetName = selectedOption ? selectedOption.text : currentDatasetId;
+
+      if (!currentDatasetId) {
+        alert('No dataset selected.');
+        return;
       }
-    };
 
-    window.promptIndexNewDataset = async function() {
-      const datasetName = prompt('Enter a name for this codebase dataset (e.g. "auth-service", "frontend"):');
-      if (!datasetName) return;
-      const folderPath = prompt('Enter relative or absolute folder path to index:', '.');
-      if (!folderPath) return;
+      if (!confirm('Are you sure you want to delete dataset "' + datasetName + '"? All its indexed symbols, files, and relations will be permanently removed.')) {
+        return;
+      }
 
       try {
-        const res = await apiFetch('/api/codebase/index', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ path: folderPath, dataset: datasetName.trim() })
+        const res = await apiFetch('/api/datasets/' + encodeURIComponent(currentDatasetId) + '?project=${encodeURIComponent(projectId)}', {
+          method: 'DELETE'
         });
         const data = await res.json();
-        alert('Successfully indexed dataset "' + datasetName + '": ' + data.symbolsCount + ' symbols, ' + data.edgesCount + ' relations in ' + data.durationMs + 'ms');
-        await loadDatasets();
-        const select = document.getElementById('datasetSelect');
-        select.value = data.datasetId;
-        currentDatasetId = data.datasetId;
-        await fetchAndRenderGraph();
+        if (data.success) {
+          alert('Dataset deleted successfully.');
+          await loadDatasets();
+          await fetchAndRenderGraph();
+        } else {
+          alert('Failed to delete dataset: ' + (data.error || 'Unknown error'));
+        }
       } catch (err) {
-        alert('Failed indexing new dataset: ' + err.message);
+        alert('Error deleting dataset: ' + err.message);
       }
     };
 

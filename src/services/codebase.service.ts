@@ -80,4 +80,8 @@ export class CodebaseService {
   public getGraphData(projectId: string, dataset?: string) {
     return this.codebaseRepo.getAllGraphData(projectId, dataset);
   }
+
+  public deleteDataset(projectId: string, datasetIdOrName: string): boolean {
+    return this.codebaseRepo.deleteDataset(projectId, datasetIdOrName);
+  }
 }

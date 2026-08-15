@@ -95,4 +95,25 @@ describe('OGM-Slim Codebase AST & Graph Operations', () => {
     assert.ok(beGraph.nodes.some(n => n.label === 'startServer'));
     assert.ok(!beGraph.nodes.some(n => n.label === 'renderApp'));
   });
+
+  test('should delete dataset cleanly and cascade remove symbols and edges', async () => {
+    await codebaseService.indexDirectory(path.join(tempDir, 'frontend'), 'code-proj', 'frontend-app');
+    await codebaseService.indexDirectory(path.join(tempDir, 'backend'), 'code-proj', 'backend-api');
+
+    let datasets = codebaseService.listDatasets('code-proj');
+    assert.equal(datasets.length, 2);
+
+    const deleted = codebaseService.deleteDataset('code-proj', 'frontend-app');
+    assert.equal(deleted, true);
+
+    datasets = codebaseService.listDatasets('code-proj');
+    assert.equal(datasets.length, 1);
+    assert.equal(datasets[0].name, 'backend-api');
+
+    const feSymbols = codebaseService.findSymbols('code-proj', 'frontend-app');
+    assert.equal(feSymbols.length, 0);
+
+    const feGraph = codebaseService.getGraphData('code-proj', 'frontend-app');
+    assert.equal(feGraph.nodes.length, 0);
+  });
 });

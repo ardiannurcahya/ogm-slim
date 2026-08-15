@@ -25,8 +25,7 @@ export function renderToolbar(projectId: string): string {
 
     <!-- Codebase Actions -->
     <div id="codebaseActions" style="display:flex;gap:0.4rem">
-      <button class="mac-btn" onclick="promptIndexNewDataset()">Index Codebase</button>
-      <button class="mac-btn mac-btn-primary" onclick="triggerReindex()">Re-Index</button>
+      <button class="mac-btn" onclick="deleteCurrentDataset()" style="color:var(--mac-red);border-color:rgba(255,69,58,0.3)">Delete Dataset</button>
     </div>
 
     <!-- Memory Actions -->
