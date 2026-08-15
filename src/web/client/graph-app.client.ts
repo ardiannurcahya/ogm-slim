@@ -371,14 +371,33 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
       } else {
         // Memory Mode Inspector
         const isMem = node.node_type === 'memory';
-        document.getElementById('insName').innerText = node.label;
-        document.getElementById('insKind').innerText = isMem ? ('MEMORY: ' + (node.kind || 'typed').toUpperCase()) : ('EPISODE: ' + (node.kind || 'raw').toUpperCase());
-        document.getElementById('insKind').className = isMem ? ('mac-badge mac-badge-' + (node.kind || 'bugfix')) : 'mac-badge mac-badge-episode';
-        
+        const kindEl = document.getElementById('insKind');
         const commEl = document.getElementById('insComm');
-        commEl.innerText = isMem ? ((node.status || 'ACTIVE').toUpperCase()) : 'EVIDENCE';
-        commEl.style.background = isMem ? (node.status === 'active' ? '#30d158' : '#ff9f0a') : '#64d2ff';
-        commEl.style.color = '#ffffff';
+
+        kindEl.removeAttribute('style');
+        commEl.removeAttribute('style');
+
+        document.getElementById('insName').innerText = node.label;
+
+        if (isMem) {
+          kindEl.innerText = ('MEMORY: ' + (node.kind || 'typed')).toUpperCase();
+          kindEl.className = 'mac-badge mac-badge-' + (node.kind || 'bugfix');
+
+          commEl.innerText = (node.status || 'ACTIVE').toUpperCase();
+          commEl.className = 'mac-badge mac-badge-status-' + (node.status || 'active');
+        } else {
+          kindEl.innerText = ('EPISODE: ' + (node.kind || 'raw')).toUpperCase();
+          if (node.kind === 'error') {
+            kindEl.className = 'mac-badge mac-badge-episode-error';
+          } else if (node.kind === 'diff') {
+            kindEl.className = 'mac-badge mac-badge-episode-diff';
+          } else {
+            kindEl.className = 'mac-badge mac-badge-episode';
+          }
+
+          commEl.innerText = 'EVIDENCE';
+          commEl.className = 'mac-badge mac-badge-evidence';
+        }
 
         document.getElementById('insFile').innerText = 'ID: ' + node.key + ' | ' + (node.created_at || node.observed_at || '');
         document.getElementById('metaLabel1').innerText = 'Node Type';

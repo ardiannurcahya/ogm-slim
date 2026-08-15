@@ -487,6 +487,11 @@ export const themeCss = `
   .mac-badge-research { background: rgba(168, 85, 247, 0.25); color: #c084fc; border: 1px solid rgba(192, 132, 252, 0.3); }
   .mac-badge-preference { background: rgba(244, 63, 94, 0.25); color: #fb7185; border: 1px solid rgba(251, 113, 133, 0.3); }
   .mac-badge-episode { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px dashed rgba(56, 189, 248, 0.4); }
+  .mac-badge-episode-error { background: rgba(239, 68, 68, 0.25); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.4); font-weight: 700; }
+  .mac-badge-episode-diff { background: rgba(168, 85, 247, 0.25); color: #c084fc; border: 1px solid rgba(192, 132, 252, 0.4); font-weight: 700; }
+  .mac-badge-evidence { background: #38bdf8; color: #0b0f19; font-weight: 800; border: 1px solid #0284c7; }
+  .mac-badge-status-active { background: rgba(48, 209, 88, 0.25); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.35); }
+  .mac-badge-status-archived { background: rgba(255, 159, 10, 0.25); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.35); }
 
   /* Center Graph Canvas */
   .mac-graph-view {
