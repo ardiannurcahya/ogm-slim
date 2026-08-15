@@ -29,6 +29,7 @@ program
   .option('--project <string>', 'Default project ID', 'default')
   .option('--dataset <string>', 'Dataset name to auto-index', 'ogm-slim')
   .option('--auth', 'Enable simple authentication for Webview & REST API')
+  .option('--no-auth', 'Disable authentication (direct open access without login)')
   .option('--api-key <string>', 'Set API key for authentication')
   .option('--password <string>', 'Set admin password for Webview login')
   .action(async (options) => {
@@ -38,7 +39,8 @@ program
     if (options.project) config.auth.default_project_id = options.project;
     if (options.apiKey) config.auth.api_key = options.apiKey;
     if (options.password) config.auth.admin_password = options.password;
-    if (options.auth) config.auth.enabled = true;
+    if (options.auth === true) config.auth.enabled = true;
+    if (options.auth === false) config.auth.enabled = false;
 
     const dbManager = new DatabaseManager(config.database.path, config.database.auto_migrate);
     const rawDb = dbManager.getRawDb();
@@ -72,6 +74,7 @@ program
 ===============================================================
   HTTP Server:     http://${config.server.host}:${config.server.port}
   Graph Dashboard: http://${config.server.host}:${config.server.port}/admin
+  Auth Protection: ${config.auth.enabled ? '🔒 ENABLED (API Key / Password required)' : '🔓 DISABLED (Direct open access)'}
   Database Path:   ${config.database.path}
   Project ID:      ${config.auth.default_project_id}
 ===============================================================
