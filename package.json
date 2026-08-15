@@ -3,9 +3,33 @@
   "version": "1.0.0",
   "description": "Persistent memory service & codebase knowledge graph for AI coding agents (Slim TypeScript Edition)",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "ogm-slim": "./dist/cli.js"
   },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ardiannurcahya/ogm-slim.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ardiannurcahya/ogm-slim/issues"
+  },
+  "homepage": "https://github.com/ardiannurcahya/ogm-slim#readme",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/cli.ts serve",
@@ -22,7 +46,8 @@
     "knowledge-graph",
     "ast",
     "codebase-search",
-    "sigmajs"
+    "visjs",
+    "graph"
   ],
   "author": "ardiannurcahya",
   "license": "MIT",
