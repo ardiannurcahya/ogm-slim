@@ -9,9 +9,9 @@ name: ogm-slim
 description: OpenGraphMemory Slim (OGM-Slim) persistent agent memory and codebase AST knowledge graph. Use to recall past bug fixes, search codebase symbols, inspect call graphs, and commit durable observations.
 ---
 
-# OGM-Slim Agent Operational Memory & Codebase Graph
+# OGM-Slim: Agent Operational Memory & AST Codebase Graph
 
-OGM-Slim provides persistent, project-scoped operational memory and fast AST codebase search for AI coding agents.
+OGM-Slim is a zero-latency, SQLite-backed operational memory service and AST codebase knowledge graph designed for AI coding agents.
 
 ## 🎯 Decision Tree & Workflow
 
@@ -22,14 +22,16 @@ OGM-Slim provides persistent, project-scoped operational memory and fast AST cod
 
 2. **During Non-Trivial Work**:
    - Call \`memory_observe\` to log key intermediate evidence (error logs, command outputs, specific diffs).
-   - Keep the returned \`episode.id\` for provenance citations.
+   - Save the returned \`episode.id\` for provenance citations in \`memory_commit\`.
 
 3. **After Completing a Bug Fix or Solution**:
-   - Call \`memory_commit\` with typed content:
+   - Call \`memory_commit\` with typed content and cited episodes:
      - \`bugfix\`: \`{ summary, root_cause, fix, verification }\`
-     - \`decision\`: \`{ decision, rationale, alternatives }\`
+     - \`decision\`: \`{ decision, rationale, alternatives_considered }\`
      - \`procedure\`: \`{ name, steps, prerequisites }\`
      - \`research\`: \`{ question, finding, sources }\`
+     - \`preference\`: \`{ topic, rule, guideline }\`
+     - \`learning\`: \`{ concept, insight, example }\`
 
 ## 🛠️ MCP Tools Reference (12 Tools)
 
@@ -49,7 +51,7 @@ OGM-Slim provides persistent, project-scoped operational memory and fast AST cod
 | \`codebase_file_summary\` | High-density file summary and symbols | \`file\` |
 
 ## 🌐 Web Visualization UI
-Direct interactive Sigma.js graph visualization dashboard is live at:
+Direct interactive graph visualization dashboard (Codebase Graph & Agent Memory Graph) is live at:
 \`http://127.0.0.1:8080/admin\` or \`http://127.0.0.1:8080/graph\`
 `;
 }
