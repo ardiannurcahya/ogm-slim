@@ -411,29 +411,66 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
     }
 
     window.toggleSidebar = function(side) {
+      const isMobile = window.innerWidth <= 960;
       const backdrop = document.getElementById('drawerBackdrop');
       const leftCol = document.getElementById('explorerCol');
       const rightCol = document.getElementById('inspectorCol');
+      const btnExplorer = document.getElementById('btnToggleExplorer');
+      const btnInspector = document.getElementById('btnToggleInspector');
 
-      if (side === 'explorer') {
-        const isOpen = leftCol && leftCol.classList.contains('open');
-        if (isOpen) {
-          leftCol.classList.remove('open');
-          if (backdrop) backdrop.classList.remove('active');
-        } else {
-          if (leftCol) leftCol.classList.add('open');
-          if (rightCol) rightCol.classList.remove('open');
-          if (backdrop) backdrop.classList.add('active');
+      if (isMobile) {
+        if (side === 'explorer') {
+          const isOpen = leftCol && leftCol.classList.contains('open');
+          if (isOpen) {
+            leftCol.classList.remove('open');
+            if (btnExplorer) btnExplorer.classList.remove('active');
+            if (backdrop) backdrop.classList.remove('active');
+          } else {
+            if (leftCol) leftCol.classList.add('open');
+            if (rightCol) rightCol.classList.remove('open');
+            if (btnExplorer) btnExplorer.classList.add('active');
+            if (btnInspector) btnInspector.classList.remove('active');
+            if (backdrop) backdrop.classList.add('active');
+          }
+        } else if (side === 'inspector') {
+          const isOpen = rightCol && rightCol.classList.contains('open');
+          if (isOpen) {
+            rightCol.classList.remove('open');
+            if (btnInspector) btnInspector.classList.remove('active');
+            if (backdrop) backdrop.classList.remove('active');
+          } else {
+            if (rightCol) rightCol.classList.add('open');
+            if (leftCol) leftCol.classList.remove('open');
+            if (btnInspector) btnInspector.classList.add('active');
+            if (btnExplorer) btnExplorer.classList.remove('active');
+            if (backdrop) backdrop.classList.add('active');
+          }
         }
-      } else if (side === 'inspector') {
-        const isOpen = rightCol && rightCol.classList.contains('open');
-        if (isOpen) {
-          rightCol.classList.remove('open');
-          if (backdrop) backdrop.classList.remove('active');
-        } else {
-          if (rightCol) rightCol.classList.add('open');
-          if (leftCol) leftCol.classList.remove('open');
-          if (backdrop) backdrop.classList.add('active');
+      } else {
+        // Desktop & Tablet (> 960px)
+        if (side === 'explorer') {
+          const isCollapsed = leftCol && leftCol.classList.contains('collapsed');
+          if (isCollapsed) {
+            leftCol.classList.remove('collapsed');
+            if (btnExplorer) btnExplorer.classList.add('active');
+          } else {
+            leftCol.classList.add('collapsed');
+            if (btnExplorer) btnExplorer.classList.remove('active');
+          }
+        } else if (side === 'inspector') {
+          const isCollapsed = rightCol && rightCol.classList.contains('collapsed');
+          if (isCollapsed) {
+            rightCol.classList.remove('collapsed');
+            if (btnInspector) btnInspector.classList.add('active');
+          } else {
+            rightCol.classList.add('collapsed');
+            if (btnInspector) btnInspector.classList.remove('active');
+          }
+        }
+        if (networkInstance) {
+          setTimeout(() => {
+            networkInstance.fit({ animation: { duration: 250 } });
+          }, 240);
         }
       }
     };
@@ -442,8 +479,12 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
       const backdrop = document.getElementById('drawerBackdrop');
       const leftCol = document.getElementById('explorerCol');
       const rightCol = document.getElementById('inspectorCol');
+      const btnExplorer = document.getElementById('btnToggleExplorer');
+      const btnInspector = document.getElementById('btnToggleInspector');
       if (leftCol) leftCol.classList.remove('open');
       if (rightCol) rightCol.classList.remove('open');
+      if (btnExplorer) btnExplorer.classList.remove('active');
+      if (btnInspector) btnInspector.classList.remove('active');
       if (backdrop) backdrop.classList.remove('active');
     };
 

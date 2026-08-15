@@ -6,7 +6,7 @@ export function renderSymbolExplorer(): string {
         <span id="explorerTitle">Symbols</span>
         <div style="display:flex;align-items:center;gap:0.4rem">
           <span id="symFilteredCount" style="color:var(--mac-accent);font-family:var(--mac-mono);font-size:0.75rem">-</span>
-          <button class="mac-drawer-close" onclick="toggleSidebar('explorer')" title="Close Drawer">&times;</button>
+          <button class="mac-panel-close-btn" onclick="toggleSidebar('explorer')" title="Hide Explorer Sidebar">&times;</button>
         </div>
       </div>
       <div class="mac-search-box">

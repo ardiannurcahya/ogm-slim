@@ -17,8 +17,8 @@ export function renderHeader(): string {
       </div>
     </div>
     <div class="mac-title-right">
-      <button class="mac-btn mac-mobile-drawer-toggle" id="btnToggleExplorer" onclick="toggleSidebar('explorer')" title="Toggle Explorer">Explorer</button>
-      <button class="mac-btn mac-mobile-drawer-toggle" id="btnToggleInspector" onclick="toggleSidebar('inspector')" title="Toggle Details">Details</button>
+      <button class="mac-btn mac-panel-toggle active" id="btnToggleExplorer" onclick="toggleSidebar('explorer')" title="Toggle Explorer Sidebar">Explorer</button>
+      <button class="mac-btn mac-panel-toggle active" id="btnToggleInspector" onclick="toggleSidebar('inspector')" title="Toggle Details Panel">Details</button>
       <button id="authLogoutBtn" class="mac-btn" onclick="handleLogout()" style="display:none">Logout</button>
       <a href="javascript:location.reload()" class="mac-btn" title="Reload Page">Refresh</a>
     </div>

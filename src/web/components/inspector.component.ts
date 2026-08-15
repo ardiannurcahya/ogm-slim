@@ -4,7 +4,7 @@ export function renderContractInspector(): string {
     <div class="mac-col-header">
       <div class="mac-section-title">
         <span>Inspector</span>
-        <button class="mac-drawer-close" onclick="toggleSidebar('inspector')" title="Close Drawer">&times;</button>
+        <button class="mac-panel-close-btn" onclick="toggleSidebar('inspector')" title="Hide Details Panel">&times;</button>
       </div>
     </div>
     <div class="mac-inspector-body" id="inspectorBox">

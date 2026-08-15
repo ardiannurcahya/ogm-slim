@@ -183,9 +183,37 @@ export const themeCss = `
     background: #0077ed;
   }
 
-  /* Mobile Drawer Toggle Buttons (Visible on Mobile/Tablet) */
-  .mac-mobile-drawer-toggle {
-    display: none;
+  /* Panel Toggle Buttons in Titlebar */
+  .mac-panel-toggle {
+    font-size: 0.76rem;
+    color: var(--mac-text-secondary);
+  }
+
+  .mac-panel-toggle.active {
+    background: rgba(10, 132, 255, 0.2);
+    border-color: var(--mac-blue);
+    color: #ffffff;
+  }
+
+  /* Hide / Close Button inside Sidebar Header */
+  .mac-panel-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--mac-text-muted);
+    font-size: 1.15rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+  }
+
+  .mac-panel-close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--mac-text);
   }
 
   /* Secondary Toolbar / Metrics Bar */
@@ -229,14 +257,16 @@ export const themeCss = `
     font-family: var(--mac-mono);
   }
 
-  /* Main 3-Column Layout */
+  /* Main Flexbox Layout (Seamless Sidebar Collapsing on Desktop/Tablet) */
   .mac-layout {
-    display: grid;
-    grid-template-columns: minmax(260px, 280px) 1fr minmax(310px, 350px);
+    display: flex;
+    flex-direction: row;
     flex: 1;
     min-height: 0;
     overflow: hidden;
     position: relative;
+    width: 100%;
+    height: 100%;
   }
 
   .mac-col {
@@ -246,15 +276,40 @@ export const themeCss = `
     min-height: 0;
     overflow: hidden;
     background: var(--mac-sidebar-bg);
+    transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1), min-width 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease;
   }
 
   .mac-col-left {
+    width: 280px;
+    min-width: 280px;
     border-right: 1px solid var(--mac-border);
+    flex-shrink: 0;
+  }
+
+  .mac-col-left.collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+    opacity: 0;
+    pointer-events: none;
+    border-right: none;
+    overflow: hidden;
   }
 
   .mac-col-right {
+    width: 340px;
+    min-width: 340px;
     border-left: 1px solid var(--mac-border);
     background: var(--mac-window-bg);
+    flex-shrink: 0;
+  }
+
+  .mac-col-right.collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+    opacity: 0;
+    pointer-events: none;
+    border-left: none;
+    overflow: hidden;
   }
 
   .mac-col-header {
@@ -276,20 +331,6 @@ export const themeCss = `
     display: flex;
     justify-content: space-between;
     align-items: center;
-  }
-
-  .mac-drawer-close {
-    display: none;
-    background: transparent;
-    border: none;
-    color: var(--mac-text-muted);
-    font-size: 1.25rem;
-    cursor: pointer;
-    line-height: 1;
-    padding: 0.1rem 0.3rem;
-  }
-  .mac-drawer-close:hover {
-    color: var(--mac-text);
   }
 
   /* Search & Select Inputs */
@@ -439,6 +480,8 @@ export const themeCss = `
     overflow: hidden;
     height: 100%;
     min-height: 0;
+    flex: 1;
+    min-width: 0;
   }
 
   #networkContainer {
@@ -730,16 +773,8 @@ export const themeCss = `
      RESPONSIVE MEDIA QUERIES (Mobile, Tablet, Desktop)
      ========================================================================== */
 
-  /* Tablet & Mobile Screens (<= 960px) */
+  /* Mobile Screens (<= 960px) */
   @media (max-width: 960px) {
-    .mac-mobile-drawer-toggle {
-      display: inline-flex;
-    }
-
-    .mac-drawer-close {
-      display: inline-block;
-    }
-
     .mac-layout {
       display: block;
       position: relative;
@@ -762,6 +797,7 @@ export const themeCss = `
       top: 0;
       bottom: 0;
       width: min(320px, 85vw);
+      min-width: unset;
       z-index: 50;
       background: #14141a;
       transform: translateX(-105%);
@@ -780,6 +816,7 @@ export const themeCss = `
       top: 0;
       bottom: 0;
       width: min(360px, 90vw);
+      min-width: unset;
       z-index: 50;
       background: #181820;
       transform: translateX(105%);
@@ -806,10 +843,6 @@ export const themeCss = `
     .mac-titlebar {
       padding: 0.35rem 0.5rem;
       min-height: 40px;
-    }
-
-    .mac-window-title span:last-child {
-      display: none;
     }
 
     .mac-tab-btn {
