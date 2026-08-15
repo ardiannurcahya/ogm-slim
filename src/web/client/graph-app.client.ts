@@ -729,10 +729,10 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
         const isMem = n.node_type === 'memory';
         const col = memoryColors[n.kind] || (isMem ? memoryColors.decision : memoryColors.episode);
         const cleanTitle = n.label || '';
-        const shortTitle = cleanTitle.length > 32 ? cleanTitle.slice(0, 30) + '...' : cleanTitle;
+        const nl = String.fromCharCode(10);
         const formattedLabel = isMem
-          ? '[' + (n.kind || 'MEMORY').toUpperCase() + ']\n' + shortTitle
-          : 'Evidence:\n' + (cleanTitle.length > 28 ? cleanTitle.slice(0, 26) + '...' : cleanTitle);
+          ? ('[' + (n.kind || 'MEMORY').toUpperCase() + ']' + nl + shortTitle)
+          : ('Evidence:' + nl + (cleanTitle.length > 28 ? cleanTitle.slice(0, 26) + '...' : cleanTitle));
 
         return {
           id: n.key,
