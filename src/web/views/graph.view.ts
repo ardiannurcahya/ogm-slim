@@ -7,7 +7,7 @@ import { renderContractInspector } from '../components/inspector.component.js';
 import { renderClientScript } from '../client/graph-app.client.js';
 
 /**
- * Renders the authentic macOS styled Codebase Knowledge Graph Explorer with professional typography.
+ * Renders the interactive Codebase Knowledge Graph Explorer with professional typography.
  */
 export function renderGraphPage(projectId: string): string {
   return `<!doctype html>

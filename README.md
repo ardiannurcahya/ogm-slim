@@ -3,7 +3,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg)](https://www.typescriptlang.org/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-Official%20SDK%20(12%20Tools)-purple.svg)](https://modelcontextprotocol.io/)
 [![SQLite](https://img.shields.io/badge/SQLite-WAL%20%2B%20FTS5-green.svg)](https://sqlite.org/)
-[![Visualizer](https://img.shields.io/badge/UI-macOS%20Native%20Theme-black.svg)](http://127.0.0.1:8080/admin)
+[![Visualizer](https://img.shields.io/badge/UI-Interactive%20Graph%20Canvas-black.svg)](http://127.0.0.1:8080/admin)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **OGM-Slim** is an ultra-lightweight, zero-configuration operational memory service and AST codebase knowledge graph engine designed specifically for AI coding agents (**Claude Code**, **Google Antigravity**, **OpenCode**, **Cursor**, **Windsurf**).
@@ -17,7 +17,7 @@
 - 🌳 **Multi-Language Tree-sitter WASM Engine**: High-accuracy AST extraction for **TypeScript**, **TSX**, **JavaScript**, **JSX**, **Go**, **Python**, and **Rust** (~280 files/sec, ~1,250 symbols/sec).
 - 🗂️ **Multi-Codebase Dataset Isolation**: Index and manage multiple separate repositories in dedicated dataset partitions with zero graph pollution.
 - 🧬 **Graph Analytics & Louvain Clustering**: Built-in Louvain Modularity ($Q$) community detection & power-iteration PageRank centrality.
-- 🍏 **macOS Dark Theme Native UI**: Window traffic lights, frosted-glass HUD controls, SF Pro / Inter typography, JetBrains Mono code panels, dataset switcher, and contract inspector.
+- 🖥️ **Interactive Web Graph Dashboard**: Real-time graph explorer, HUD controls, Inter / JetBrains Mono typography, dataset switcher, and contract inspector.
 - 🔌 **Official MCP Protocol (12 Tools)**: Fully compliant with `@modelcontextprotocol/sdk` for seamless agent tool invocations over stdio or HTTP.
 - 📦 **Automated Harness Integration**: 1-command installer for Claude Code, Antigravity, OpenCode, Cursor, and Windsurf.
 
