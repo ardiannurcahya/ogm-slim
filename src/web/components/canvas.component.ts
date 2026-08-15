@@ -27,6 +27,25 @@ export function renderGraphCanvas(): string {
       </select>
     </div>
     <div id="networkContainer"></div>
+
+    <!-- Floating Bottom Metrics Capsule -->
+    <div class="mac-bottom-hud" id="bottomStatsHud">
+      <div id="hudCodebaseStats" class="mac-hud-stat-row">
+        <span><strong id="hudNodeCount">-</strong> symbols</span>
+        <span class="mac-hud-stat-sep">•</span>
+        <span><strong id="hudEdgeCount">-</strong> relations</span>
+        <span class="mac-hud-stat-sep">•</span>
+        <span><strong id="hudCommCount">-</strong> clusters</span>
+      </div>
+      <div id="hudMemoryStats" class="mac-hud-stat-row" style="display:none">
+        <span><strong id="hudMemCount">-</strong> memories</span>
+        <span class="mac-hud-stat-sep">•</span>
+        <span><strong id="hudEpCount">-</strong> episodes</span>
+        <span class="mac-hud-stat-sep">•</span>
+        <span><strong id="hudMemEdgeCount">-</strong> citations</span>
+      </div>
+    </div>
+
     <div class="mac-legend-hud" id="graphLegend">
       <span><span class="mac-legend-dot" style="background:var(--mac-green)"></span>Function</span>
       <span><span class="mac-legend-dot" style="background:var(--mac-teal)"></span>Method</span>

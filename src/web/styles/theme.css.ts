@@ -609,6 +609,44 @@ export const themeCss = `
     border-color: rgba(255, 255, 255, 0.15);
   }
 
+  /* Floating Bottom Metrics Capsule */
+  .mac-bottom-hud {
+    position: absolute;
+    bottom: 0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 18;
+    background: rgba(18, 18, 24, 0.92);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    padding: 0.32rem 0.85rem;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.55);
+    display: none;
+    pointer-events: none;
+  }
+
+  .mac-hud-stat-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.74rem;
+    color: var(--mac-text-secondary);
+    white-space: nowrap;
+  }
+
+  .mac-hud-stat-row strong {
+    color: #f8fafc;
+    font-family: var(--mac-mono);
+    font-weight: 700;
+  }
+
+  .mac-hud-stat-sep {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.65rem;
+  }
+
   .mac-legend-hud {
     position: absolute;
     bottom: 0.75rem;
@@ -971,6 +1009,12 @@ export const themeCss = `
     /* Hide bottom legend on small mobile to maximize clean visual area */
     .mac-legend-hud {
       display: none;
+    }
+
+    /* Show floating bottom stats capsule on mobile */
+    .mac-bottom-hud {
+      display: flex;
+      bottom: 0.65rem;
     }
 
     /* Sleek compact edge handles on mobile */

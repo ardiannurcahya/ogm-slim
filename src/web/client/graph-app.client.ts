@@ -132,6 +132,8 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
       if (mode === 'codebase') {
         document.getElementById('codebaseStatusPills').style.display = 'flex';
         document.getElementById('memoryStatusPills').style.display = 'none';
+        const hCode = document.getElementById('hudCodebaseStats'); if (hCode) hCode.style.display = 'flex';
+        const hMem = document.getElementById('hudMemoryStats'); if (hMem) hMem.style.display = 'none';
         document.getElementById('codebaseActions').style.display = 'flex';
         document.getElementById('codebaseFilters').style.display = 'flex';
         document.getElementById('memoryFilters').style.display = 'none';
@@ -143,6 +145,8 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
       } else {
         document.getElementById('codebaseStatusPills').style.display = 'none';
         document.getElementById('memoryStatusPills').style.display = 'flex';
+        const hCode = document.getElementById('hudCodebaseStats'); if (hCode) hCode.style.display = 'none';
+        const hMem = document.getElementById('hudMemoryStats'); if (hMem) hMem.style.display = 'flex';
         document.getElementById('codebaseActions').style.display = 'none';
         document.getElementById('codebaseFilters').style.display = 'none';
         document.getElementById('memoryFilters').style.display = 'flex';
@@ -622,6 +626,10 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
       document.getElementById('commCount').innerText = distinctComms.size;
       document.getElementById('symFilteredCount').innerText = raw.nodes.length;
 
+      const hN = document.getElementById('hudNodeCount'); if (hN) hN.innerText = raw.nodes.length;
+      const hE = document.getElementById('hudEdgeCount'); if (hE) hE.innerText = raw.edges.length;
+      const hC = document.getElementById('hudCommCount'); if (hC) hC.innerText = distinctComms.size;
+
       const commFilterSelect = document.getElementById('commFilter');
       const commListSorted = Array.from(distinctComms).sort((a, b) => a - b);
       commFilterSelect.innerHTML = '<option value="">All Clusters</option>' + 
@@ -712,6 +720,10 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
       document.getElementById('epCount').innerText = epNodes.length;
       document.getElementById('memEdgeCount').innerText = raw.edges.length;
       document.getElementById('symFilteredCount').innerText = raw.nodes.length;
+
+      const hM = document.getElementById('hudMemCount'); if (hM) hM.innerText = memNodes.length;
+      const hEp = document.getElementById('hudEpCount'); if (hEp) hEp.innerText = epNodes.length;
+      const hME = document.getElementById('hudMemEdgeCount'); if (hME) hME.innerText = raw.edges.length;
 
       nodeDataMap.clear();
       raw.nodes.forEach(n => nodeDataMap.set(n.key, n));
