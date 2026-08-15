@@ -139,24 +139,9 @@ ogm-slim harness print claude
 
 ## 🏗️ Architecture & Data Model
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    AI Coding Agent                          │
-│        (Claude Desktop / Cursor / Antigravity)              │
-└──────────────────────────────┬──────────────────────────────┘
-                               │ MCP Protocol (12 Tools)
-┌──────────────────────────────▼──────────────────────────────┐
-│                    OGM-Slim Engine                          │
-├──────────────────────────────┬──────────────────────────────┤
-│    AST Codebase Graph        │    Bi-Temporal Memory Engine │
-│  - Tree-Sitter WASM          │  - Immutable Episodes        │
-│  - Cross-File Call Graph     │  - Distilled Memories        │
-│  - Louvain Community ($Q$)   │  - Symbol-Anchored Links     │
-│  - PageRank Centrality       │  - Hybrid BM25 Ranking       │
-├──────────────────────────────┴──────────────────────────────┤
-│               Embedded SQLite (WAL + FTS5)                  │
-└─────────────────────────────────────────────────────────────┘
-```
+<div align="center">
+  <img src="assets/architecture.png" alt="OGM-Slim Architecture & Data Model Diagram" width="100%" style="border-radius: 12px; border: 1px solid #e2e8f0; margin: 1rem 0;" />
+</div>
 
 ### Bi-Temporal Memory Schema
 - **Episodes (`episodes`)**: Immutable historical evidence logs with raw command outputs, git diffs, and timestamps.
