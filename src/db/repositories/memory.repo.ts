@@ -75,13 +75,27 @@ export class MemoryRepository {
     projectId: string,
     type: MemoryType,
     content: Record<string, unknown>,
-    confidence: number,
+    confidence: number = 1.0,
     references: EpisodeReference[] = [],
-    idempotencyKey?: string
+    idempotencyKey?: string,
+    targetSymbolKey?: string
+  ): { memory: Memory; replayed: boolean } {
+    return this.commit(projectId, type, content, confidence, references, idempotencyKey, targetSymbolKey);
+  }
+
+  public commit(
+    projectId: string,
+    type: MemoryType,
+    content: Record<string, unknown>,
+    confidence: number = 1.0,
+    references: EpisodeReference[] = [],
+    idempotencyKey?: string,
+    targetSymbolKey?: string
   ): { memory: Memory; replayed: boolean } {
     const key = idempotencyKey || crypto.randomUUID();
+    const symKey = targetSymbolKey || (content.target_symbol_key as string) || (content.symbol_key as string);
     const existingStmt = this.db.prepare(
-      'SELECT id, project_id, type, content, confidence, status, origin_ids, created_at, updated_at, idempotency_key FROM memories WHERE project_id = ? AND idempotency_key = ?'
+      'SELECT id, project_id, type, content, confidence, status, origin_ids, target_symbol_key, created_at, updated_at, idempotency_key FROM memories WHERE project_id = ? AND idempotency_key = ?'
     );
     const existing = existingStmt.get(projectId, key) as any;
     if (existing) {
@@ -94,6 +108,7 @@ export class MemoryRepository {
           confidence: existing.confidence,
           status: existing.status as MemoryStatus,
           origin_ids: JSON.parse(existing.origin_ids),
+          target_symbol_key: existing.target_symbol_key,
           created_at: existing.created_at,
           updated_at: existing.updated_at,
           idempotency_key: existing.idempotency_key,
@@ -108,10 +123,18 @@ export class MemoryRepository {
     const originIds = references.map((r) => r.episode_id);
 
     const tx = this.db.transaction(() => {
+      // Auto-supersede previous memory if specified
+      const supersedeId = (content.supersedes_id || content.supersedes) as string;
+      if (supersedeId && typeof supersedeId === 'string') {
+        this.db.prepare("UPDATE memories SET status = 'invalidated', updated_at = datetime('now') WHERE project_id = ? AND id = ?").run(projectId, supersedeId);
+        const fbId = `fb_${crypto.randomBytes(8).toString('hex')}`;
+        this.db.prepare('INSERT INTO feedback (id, project_id, memory_id, kind, detail) VALUES (?, ?, ?, ?, ?)').run(fbId, projectId, supersedeId, 'superseded', JSON.stringify({ superseded_by: id }));
+      }
+
       const insert = this.db.prepare(
-        'INSERT INTO memories (id, project_id, type, content, confidence, status, origin_ids, created_at, updated_at, idempotency_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO memories (id, project_id, type, content, confidence, status, origin_ids, target_symbol_key, created_at, updated_at, idempotency_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
       );
-      insert.run(id, projectId, type, contentStr, confidence, 'active', JSON.stringify(originIds), now, now, key);
+      insert.run(id, projectId, type, contentStr, confidence, 'active', JSON.stringify(originIds), symKey || null, now, now, key);
 
       // Insert references
       const refInsert = this.db.prepare(
@@ -142,6 +165,7 @@ export class MemoryRepository {
         confidence,
         status: 'active',
         origin_ids: originIds,
+        target_symbol_key: symKey,
         created_at: now,
         updated_at: now,
         idempotency_key: key,
@@ -152,6 +176,16 @@ export class MemoryRepository {
 
   public recall(query: RecallQuery): MemoryCapsule[] {
     const limit = Math.min(query.limit || 10, 50);
+    const nowMs = Date.now();
+
+    const computeScore = (ftsRank: number | null, confidence: number, createdAt: string) => {
+      const bm25Score = ftsRank !== null ? Math.abs(1 / (1 + Math.max(0, ftsRank))) : 0.5;
+      const confScore = Math.max(0.1, Math.min(1.0, confidence || 1.0));
+      const createdMs = new Date(createdAt).getTime() || nowMs;
+      const daysAgo = Math.max(0, (nowMs - createdMs) / (1000 * 60 * 60 * 24));
+      const recencyScore = Math.exp(-0.05 * daysAgo); // 1.0 today -> ~0.74 at 6 days -> ~0.50 at 14 days
+      return parseFloat((0.60 * bm25Score + 0.25 * confScore + 0.15 * recencyScore).toFixed(4));
+    };
 
     const searchText = query.text || query.query;
     if (searchText && searchText.trim()) {
@@ -166,50 +200,78 @@ export class MemoryRepository {
 
       if (cleanFts) {
         try {
-          const stmt = this.db.prepare(`
-            SELECT m.id, m.type, m.content, m.confidence, m.status, m.created_at, m.origin_ids,
+          let sql = `
+            SELECT m.id, m.type, m.content, m.confidence, m.status, m.created_at, m.origin_ids, m.target_symbol_key,
                    rank as fts_rank
             FROM fts_memories f
             JOIN memories m ON m.id = f.memory_id
             WHERE f.project_id = ? AND m.status = 'active' AND fts_memories MATCH ?
-            ORDER BY rank
-            LIMIT ?
-          `);
-          const rows = stmt.all(query.project_id, cleanFts, limit) as any[];
+          `;
+          const params: any[] = [query.project_id, cleanFts];
+
+          if (query.type) {
+            sql += ' AND m.type = ?';
+            params.push(query.type);
+          }
+          if (query.target_symbol_key) {
+            sql += ' AND m.target_symbol_key = ?';
+            params.push(query.target_symbol_key);
+          }
+
+          sql += ' ORDER BY rank LIMIT ?';
+          params.push(limit * 2);
+
+          const rows = this.db.prepare(sql).all(...params) as any[];
           if (rows.length > 0) {
-            return rows.map((r) => ({
+            const results = rows.map((r) => ({
               id: r.id,
               type: r.type as MemoryType,
               confidence: r.confidence,
               status: r.status as MemoryStatus,
               content: JSON.parse(r.content),
-              score: Math.abs(1 / (1 + (r.fts_rank || 0))),
+              target_symbol_key: r.target_symbol_key,
+              score: computeScore(r.fts_rank, r.confidence, r.created_at),
               created_at: r.created_at,
               citations: JSON.parse(r.origin_ids || '[]'),
             }));
+            results.sort((a, b) => b.score - a.score);
+            return results.slice(0, limit);
           }
         } catch {
-          // Fallback to LIKE query if FTS syntax error
+          // Fallback to table scan
         }
       }
     }
 
-    // Fallback or exact query
-    const stmt = this.db.prepare(`
-      SELECT id, type, content, confidence, status, created_at, origin_ids
+    // Direct symbol query or fallback query
+    let sql = `
+      SELECT id, type, content, confidence, status, created_at, origin_ids, target_symbol_key
       FROM memories
       WHERE project_id = ? AND status = 'active'
-      ORDER BY created_at DESC
-      LIMIT ?
-    `);
-    const rows = stmt.all(query.project_id, limit) as any[];
+    `;
+    const params: any[] = [query.project_id];
+
+    if (query.type) {
+      sql += ' AND type = ?';
+      params.push(query.type);
+    }
+    if (query.target_symbol_key) {
+      sql += ' AND target_symbol_key = ?';
+      params.push(query.target_symbol_key);
+    }
+
+    sql += ' ORDER BY created_at DESC LIMIT ?';
+    params.push(limit);
+
+    const rows = this.db.prepare(sql).all(...params) as any[];
     return rows.map((r) => ({
       id: r.id,
       type: r.type as MemoryType,
       confidence: r.confidence,
       status: r.status as MemoryStatus,
       content: JSON.parse(r.content),
-      score: r.confidence,
+      target_symbol_key: r.target_symbol_key,
+      score: computeScore(null, r.confidence, r.created_at),
       created_at: r.created_at,
       citations: JSON.parse(r.origin_ids || '[]'),
     }));
@@ -398,5 +460,124 @@ export class MemoryRepository {
     }));
 
     return { nodes, edges };
+  }
+
+  public exportData(projectId: string) {
+    const memories = this.db.prepare('SELECT * FROM memories WHERE project_id = ?').all(projectId);
+    const episodes = this.db.prepare('SELECT * FROM episodes WHERE project_id = ?').all(projectId);
+    const references = this.db.prepare(`
+      SELECT mr.* FROM memory_references mr
+      JOIN memories m ON m.id = mr.memory_id
+      WHERE m.project_id = ?
+    `).all(projectId);
+    const feedback = this.db.prepare('SELECT * FROM feedback WHERE project_id = ?').all(projectId);
+
+    return {
+      version: '1.0',
+      project_id: projectId,
+      exported_at: new Date().toISOString(),
+      memories: memories.map((m: any) => ({
+        ...m,
+        content: JSON.parse(m.content),
+        origin_ids: JSON.parse(m.origin_ids || '[]'),
+      })),
+      episodes: episodes.map((e: any) => ({
+        ...e,
+        observation: JSON.parse(e.observation),
+        metadata: JSON.parse(e.metadata || '{}'),
+      })),
+      references,
+      feedback: feedback.map((f: any) => ({
+        ...f,
+        detail: JSON.parse(f.detail || '{}'),
+      })),
+    };
+  }
+
+  public importData(projectId: string, data: any): { importedMemories: number; importedEpisodes: number } {
+    let importedMemories = 0;
+    let importedEpisodes = 0;
+    const epIdMap = new Map<string, string>();
+    const memIdMap = new Map<string, string>();
+
+    const tx = this.db.transaction(() => {
+      if (Array.isArray(data.episodes)) {
+        for (const ep of data.episodes) {
+          const newEpId = `ep_${crypto.randomBytes(8).toString('hex')}`;
+          epIdMap.set(ep.id, newEpId);
+
+          const obsStr = typeof ep.observation === 'object' ? JSON.stringify(ep.observation) : String(ep.observation);
+          const metaStr = typeof ep.metadata === 'object' ? JSON.stringify(ep.metadata) : '{}';
+          const stmt = this.db.prepare(`
+            INSERT INTO episodes (id, project_id, kind, observation, metadata, observed_at, created_at, idempotency_key)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `);
+          stmt.run(
+            newEpId,
+            projectId,
+            ep.kind,
+            obsStr,
+            metaStr,
+            ep.observed_at || new Date().toISOString(),
+            ep.created_at || new Date().toISOString(),
+            `imp_${ep.idempotency_key || ep.id}_${projectId}`
+          );
+          importedEpisodes++;
+        }
+      }
+
+      if (Array.isArray(data.memories)) {
+        for (const m of data.memories) {
+          const newMemId = `mem_${crypto.randomBytes(12).toString('hex')}`;
+          memIdMap.set(m.id, newMemId);
+
+          const contentStr = JSON.stringify(m.content);
+          const mappedOriginIds = (m.origin_ids || []).map((oldId: string) => epIdMap.get(oldId) || oldId);
+          const symKey = m.target_symbol_key || null;
+
+          const stmt = this.db.prepare(`
+            INSERT INTO memories (id, project_id, type, content, confidence, status, origin_ids, target_symbol_key, created_at, updated_at, idempotency_key)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `);
+          stmt.run(
+            newMemId,
+            projectId,
+            m.type,
+            contentStr,
+            m.confidence || 1.0,
+            m.status || 'active',
+            JSON.stringify(mappedOriginIds),
+            symKey,
+            m.created_at || new Date().toISOString(),
+            m.updated_at || new Date().toISOString(),
+            `imp_${m.idempotency_key || m.id}_${projectId}`
+          );
+          importedMemories++;
+
+          // Index in FTS5
+          const contentText = Object.entries(m.content || {})
+            .map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
+            .join(' ');
+          this.db
+            .prepare('INSERT INTO fts_memories (memory_id, project_id, content_text) VALUES (?, ?, ?)')
+            .run(newMemId, projectId, contentText);
+        }
+      }
+
+      if (Array.isArray(data.references)) {
+        const refStmt = this.db.prepare(`
+          INSERT OR IGNORE INTO memory_references (memory_id, episode_id, purpose)
+          VALUES (?, ?, ?)
+        `);
+        for (const r of data.references) {
+          const targetMem = memIdMap.get(r.memory_id) || r.memory_id;
+          const targetEp = epIdMap.get(r.episode_id) || r.episode_id;
+          refStmt.run(targetMem, targetEp, r.purpose || 'evidence');
+        }
+      }
+    });
+
+    tx();
+    return { importedMemories, importedEpisodes };
   }
 }

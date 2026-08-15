@@ -49,13 +49,28 @@ CREATE TABLE IF NOT EXISTS memories (
   confidence REAL NOT NULL DEFAULT 1.0,
   status TEXT NOT NULL DEFAULT 'active',
   origin_ids TEXT NOT NULL DEFAULT '[]',
+  target_symbol_key TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),
   idempotency_key TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_memories_project_status ON memories(project_id, status);
 CREATE INDEX IF NOT EXISTS idx_memories_type ON memories(project_id, type);
+CREATE INDEX IF NOT EXISTS idx_memories_symbol ON memories(project_id, target_symbol_key);
 CREATE INDEX IF NOT EXISTS idx_memories_idempotency ON memories(project_id, idempotency_key);
+
+-- Codebase Files Cache for incremental hashing
+CREATE TABLE IF NOT EXISTS codebase_files (
+  project_id TEXT NOT NULL,
+  dataset_id TEXT NOT NULL DEFAULT 'default',
+  file_path TEXT NOT NULL,
+  content_hash TEXT NOT NULL,
+  mtime INTEGER NOT NULL,
+  symbols_count INTEGER NOT NULL DEFAULT 0,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (project_id, dataset_id, file_path)
+);
+CREATE INDEX IF NOT EXISTS idx_codebase_files_lookup ON codebase_files(project_id, dataset_id, file_path);
 
 -- Memory episode references
 CREATE TABLE IF NOT EXISTS memory_references (
@@ -203,6 +218,20 @@ export function runMigrations(db: Database.Database): void {
     console.warn('[OGM-Slim] Warning during symbol_edges table migration:', e);
   }
 
-  // 3. Execute full schema
+  // 3. Check & add target_symbol_key to memories if missing
+  try {
+    const memInfo = db.prepare("PRAGMA table_info(memories)").all() as any[];
+    if (memInfo.length > 0) {
+      const symKeyCol = memInfo.find((col) => col.name === 'target_symbol_key');
+      if (!symKeyCol) {
+        db.exec("ALTER TABLE memories ADD COLUMN target_symbol_key TEXT;");
+        db.exec("CREATE INDEX IF NOT EXISTS idx_memories_symbol ON memories(project_id, target_symbol_key);");
+      }
+    }
+  } catch (e) {
+    console.warn('[OGM-Slim] Warning during memories table migration:', e);
+  }
+
+  // 4. Execute full schema
   db.exec(SCHEMA_SQL);
 }

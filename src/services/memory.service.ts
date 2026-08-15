@@ -32,9 +32,10 @@ export class MemoryService {
     content: Record<string, unknown>,
     confidence: number = 1.0,
     references: EpisodeReference[] = [],
-    idempotencyKey?: string
+    idempotencyKey?: string,
+    targetSymbolKey?: string
   ): { memory: Memory; replayed: boolean } {
-    return this.memoryRepo.commitMemory(projectId, type, content, confidence, references, idempotencyKey);
+    return this.memoryRepo.commitMemory(projectId, type, content, confidence, references, idempotencyKey, targetSymbolKey);
   }
 
   public recall(query: RecallQuery): MemoryCapsule[] {
@@ -68,5 +69,13 @@ export class MemoryService {
 
   public getMemoryGraph(projectId: string) {
     return this.memoryRepo.getMemoryGraphData(projectId);
+  }
+
+  public exportData(projectId: string) {
+    return this.memoryRepo.exportData(projectId);
+  }
+
+  public importData(projectId: string, data: any) {
+    return this.memoryRepo.importData(projectId, data);
   }
 }

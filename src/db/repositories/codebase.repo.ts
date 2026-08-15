@@ -8,6 +8,7 @@ import {
   Dataset,
   FileSummary,
   ImpactAnalysis,
+  MemoryCapsule,
   SymbolKind,
 } from '../../types/domain.js';
 
@@ -93,7 +94,8 @@ export class CodebaseRepository {
     datasetId: string,
     symbols: CodeSymbol[],
     edges: Array<{ source: string; target: string }>,
-    filesCount: number = 0
+    filesCount: number = 0,
+    fileRecords?: Array<{ relativePath: string; hash: string; mtime: number; symbolsCount: number }>
   ): void {
     const cleanDatasetId = datasetId || 'default';
 
@@ -161,6 +163,23 @@ export class CodebaseRepository {
         edgeStmt.run(projectId, cleanDatasetId, e.source, e.target);
       }
 
+      // Upsert file hash records if provided
+      if (fileRecords && fileRecords.length > 0) {
+        const fileStmt = this.db.prepare(`
+          INSERT INTO codebase_files (project_id, dataset_id, file_path, content_hash, mtime, symbols_count, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+          ON CONFLICT(project_id, dataset_id, file_path) DO UPDATE SET
+            content_hash = excluded.content_hash,
+            mtime = excluded.mtime,
+            symbols_count = excluded.symbols_count,
+            updated_at = datetime('now')
+        `);
+
+        for (const fr of fileRecords) {
+          fileStmt.run(projectId, cleanDatasetId, fr.relativePath, fr.hash, fr.mtime, fr.symbolsCount);
+        }
+      }
+
       // Update dataset statistics
       this.db
         .prepare(`
@@ -175,6 +194,39 @@ export class CodebaseRepository {
     });
 
     tx();
+  }
+
+  public getLinkedMemoriesForSymbol(
+    projectId: string,
+    symbolKey: string,
+    filePath?: string
+  ): MemoryCapsule[] {
+    try {
+      const sql = `
+        SELECT id, type, content, confidence, status, origin_ids, target_symbol_key, created_at
+        FROM memories
+        WHERE project_id = ? AND status = 'active' AND (
+          target_symbol_key = ?
+          ${filePath ? 'OR target_symbol_key = ?' : ''}
+        )
+        ORDER BY created_at DESC LIMIT 10
+      `;
+      const params = filePath ? [projectId, symbolKey, filePath] : [projectId, symbolKey];
+      const rows = this.db.prepare(sql).all(...params) as any[];
+      return rows.map((r) => ({
+        id: r.id,
+        type: r.type,
+        confidence: r.confidence,
+        status: r.status,
+        content: JSON.parse(r.content),
+        target_symbol_key: r.target_symbol_key,
+        score: 1.0,
+        created_at: r.created_at,
+        citations: JSON.parse(r.origin_ids || '[]'),
+      }));
+    } catch {
+      return [];
+    }
   }
 
   public findSymbols(
@@ -381,6 +433,7 @@ export class CodebaseRepository {
     );
 
     const blastRadius = directCallers.length * 1.5 + (transitiveCallers.length - directCallers.length) * 0.8 + affectedFiles.length * 2.0;
+    const relatedMemories = this.getLinkedMemoriesForSymbol(projectId, symbolKey, root?.file_path);
 
     return {
       symbol_key: symbolKey,
@@ -389,7 +442,7 @@ export class CodebaseRepository {
       transitive_callers: transitiveCallers,
       affected_files: affectedFiles,
       blast_radius_score: parseFloat(blastRadius.toFixed(2)),
-      related_memories: [],
+      related_memories: relatedMemories,
     };
   }
 
@@ -423,6 +476,8 @@ export class CodebaseRepository {
       if (s.end_line > maxLine) maxLine = s.end_line;
     });
 
+    const linkedMemories = this.getLinkedMemoriesForSymbol(projectId, filePath, filePath);
+
     return {
       file_path: filePath,
       language: langMap[ext] || ext,
@@ -434,7 +489,7 @@ export class CodebaseRepository {
         signature: s.signature,
       })),
       imports: [],
-      linked_memories: [],
+      linked_memories: linkedMemories,
     };
   }
 

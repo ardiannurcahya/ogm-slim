@@ -29,7 +29,7 @@ export class CodebaseService {
     const derivedName = datasetName || path.basename(resolvedPath) || 'default';
     const dataset = this.codebaseRepo.getOrCreateDataset(projectId, derivedName, resolvedPath);
 
-    const { symbols, edges, stats } = await this.indexer.indexDirectoryAsync(
+    const { symbols, edges, fileRecords, stats } = await this.indexer.indexDirectoryAsync(
       rootDir,
       projectId,
       dataset.id,
@@ -37,7 +37,14 @@ export class CodebaseService {
       ignorePatterns
     );
 
-    this.codebaseRepo.saveSymbolsBatch(projectId, dataset.id, symbols, edges, stats.filesIndexed);
+    this.codebaseRepo.saveSymbolsBatch(
+      projectId,
+      dataset.id,
+      symbols,
+      edges,
+      stats.filesIndexed,
+      fileRecords
+    );
     return stats;
   }
 

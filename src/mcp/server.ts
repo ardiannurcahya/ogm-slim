@@ -239,6 +239,7 @@ export function createMcpServer(
             query: parsed.text,
             exact: parsed.exact,
             entity_key: parsed.entity_key,
+            target_symbol_key: parsed.target_symbol_key,
             as_of: parsed.as_of,
             limit: parsed.limit,
           });
@@ -270,7 +271,8 @@ export function createMcpServer(
             parsed.content,
             parsed.confidence,
             parsed.episodes as any,
-            parsed.idempotency_key
+            parsed.idempotency_key,
+            parsed.target_symbol_key
           );
           return {
             content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],

@@ -217,7 +217,8 @@ export function registerApiRoutes(
       body.content,
       body.confidence !== undefined ? body.confidence : 1.0,
       body.episodes,
-      body.idempotency_key
+      body.idempotency_key,
+      body.target_symbol_key
     );
     return c.json(result);
   });
@@ -232,6 +233,7 @@ export function registerApiRoutes(
       type: body.type,
       exact: body.exact,
       entity_key: body.entity_key,
+      target_symbol_key: body.target_symbol_key,
       as_of: body.as_of,
       limit: body.limit,
     });
@@ -242,14 +244,31 @@ export function registerApiRoutes(
     const projectId = c.req.query('project') || config.auth.default_project_id;
     const query = c.req.query('q') || c.req.query('query') || c.req.query('text');
     const type = c.req.query('type') as any;
+    const targetSymbolKey = c.req.query('target_symbol_key') || c.req.query('symbol_key');
     const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!, 10) : undefined;
     const results = memoryService.recall({
       project_id: projectId,
       query,
       type,
+      target_symbol_key: targetSymbolKey,
       limit,
     });
     return c.json(results);
+  });
+
+  // Export / Backup
+  app.get('/api/export', (c) => {
+    const projectId = c.req.query('project') || config.auth.default_project_id;
+    const data = memoryService.exportData(projectId);
+    return c.json(data);
+  });
+
+  // Import / Restore
+  app.post('/api/import', async (c) => {
+    const body = await c.req.json();
+    const projectId = body.project_id || config.auth.default_project_id;
+    const result = memoryService.importData(projectId, body);
+    return c.json(result);
   });
 
   // Memory Detail / Inspection

@@ -94,15 +94,21 @@ export class AstExtractor {
     if (!parser || !extractor) return null;
 
     const tree = parser.parse(content);
-    const result = extractor.extract(tree, content, relativePath, projectId);
+    try {
+      const result = extractor.extract(tree, content, relativePath, projectId);
 
-    return {
-      filePath,
-      relativePath,
-      language: ext,
-      symbols: result.symbols,
-      rawCalls: result.rawCalls,
-    };
+      return {
+        filePath,
+        relativePath,
+        language: ext,
+        symbols: result.symbols,
+        rawCalls: result.rawCalls,
+      };
+    } finally {
+      if (tree && typeof (tree as any).delete === 'function') {
+        (tree as any).delete();
+      }
+    }
   }
 }
 

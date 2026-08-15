@@ -78,6 +78,7 @@ export interface Memory {
   confidence: number;
   status: MemoryStatus;
   origin_ids: string[];
+  target_symbol_key?: string;
   created_at: string;
   updated_at: string;
   idempotency_key: string;
@@ -98,6 +99,7 @@ export interface RecallQuery {
   type?: MemoryType;
   exact?: Record<string, string>;
   entity_key?: string;
+  target_symbol_key?: string;
   as_of?: string;
   limit?: number;
 }
@@ -108,6 +110,7 @@ export interface MemoryCapsule {
   confidence: number;
   status: MemoryStatus;
   content: Record<string, unknown>;
+  target_symbol_key?: string;
   score: number;
   created_at: string;
   citations: string[];

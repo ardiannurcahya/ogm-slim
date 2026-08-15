@@ -4,6 +4,7 @@ export const MemoryRecallSchema = z.object({
   text: z.string().max(4096).optional().describe('Natural language search text for memories'),
   exact: z.record(z.string()).optional().describe('Exact key-value metadata matches'),
   entity_key: z.string().optional().describe('Specific symbol or entity key to filter'),
+  target_symbol_key: z.string().optional().describe('Filter memories directly linked to a codebase symbol or file'),
   as_of: z.string().optional().describe('Temporal ISO timestamp cutoff filter'),
   limit: z.number().int().min(1).max(50).default(10).describe('Maximum number of memories to return'),
 });
@@ -41,6 +42,7 @@ export const MemoryCommitSchema = z.object({
   ]).describe('Semantic category of durable memory'),
   content: z.record(z.any()).describe('Durable structured conclusion (e.g. { summary, root_cause, fix, verification })'),
   confidence: z.number().min(0).max(1).default(1.0).describe('Confidence score between 0.0 and 1.0'),
+  target_symbol_key: z.string().optional().describe('Optional symbol or file key to link this memory directly to'),
   episodes: z.array(
     z.object({
       episode_id: z.string().describe('ID of supporting episode'),

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { AstExtractor, ExtractedFile } from './extractor.js';
 import { computeGraphAnalytics, GraphEdge } from '../ranking/centrality.js';
 import { CodeSymbol } from '../types/domain.js';
@@ -13,6 +14,14 @@ export interface IndexingStats {
   durationMs: number;
 }
 
+export interface FileHashRecord {
+  filePath: string;
+  relativePath: string;
+  hash: string;
+  mtime: number;
+  symbolsCount: number;
+}
+
 export class CodebaseIndexer {
   private extractor = new AstExtractor();
 
@@ -22,15 +31,55 @@ export class CodebaseIndexer {
     datasetId: string = 'default',
     datasetName: string = 'default',
     ignorePatterns: string[] = ['node_modules', '.git', 'dist', 'build', '.next', 'coverage', '.cache', 'generated']
-  ): Promise<{ symbols: CodeSymbol[]; edges: GraphEdge[]; stats: IndexingStats }> {
+  ): Promise<{
+    symbols: CodeSymbol[];
+    edges: GraphEdge[];
+    fileRecords: FileHashRecord[];
+    stats: IndexingStats;
+  }> {
     const startTime = Date.now();
     const files = this.walkFiles(rootDir, ignorePatterns);
 
+    // Parallel extraction with concurrency chunks of 16
+    const chunkSize = 16;
     const extractedFiles: ExtractedFile[] = [];
-    for (const f of files) {
-      const res = await this.extractor.extractFileAsync(f, rootDir, projectId);
-      if (res && res.symbols.length > 0) {
-        extractedFiles.push(res);
+    const fileRecords: FileHashRecord[] = [];
+
+    for (let i = 0; i < files.length; i += chunkSize) {
+      const chunk = files.slice(i, i + chunkSize);
+      const chunkResults = await Promise.all(
+        chunk.map(async (f) => {
+          try {
+            const stat = fs.statSync(f);
+            const content = fs.readFileSync(f);
+            const hash = crypto.createHash('sha1').update(content).digest('hex');
+            const res = await this.extractor.extractFileAsync(f, rootDir, projectId);
+            const symCount = res?.symbols.length || 0;
+            const relPath = path.relative(rootDir, f).replace(/\\/g, '/');
+
+            return {
+              extracted: res,
+              record: {
+                filePath: f,
+                relativePath: relPath,
+                hash,
+                mtime: Math.floor(stat.mtimeMs),
+                symbolsCount: symCount,
+              },
+            };
+          } catch {
+            return null;
+          }
+        })
+      );
+
+      for (const item of chunkResults) {
+        if (item) {
+          fileRecords.push(item.record);
+          if (item.extracted && item.extracted.symbols.length > 0) {
+            extractedFiles.push(item.extracted);
+          }
+        }
       }
     }
 
@@ -88,6 +137,7 @@ export class CodebaseIndexer {
     return {
       symbols: allSymbols,
       edges,
+      fileRecords,
       stats: {
         datasetId,
         datasetName,

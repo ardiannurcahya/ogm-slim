@@ -445,6 +445,21 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
       }
     };
 
+    window.exportGraphPng = function() {
+      const container = document.getElementById('networkContainer');
+      const canvas = container ? container.querySelector('canvas') : null;
+      if (!canvas) {
+        alert('Visualizer canvas is not loaded yet');
+        return;
+      }
+      const link = document.createElement('a');
+      link.download = 'ogm-slim-' + currentMode + '-' + (currentDatasetId || 'default') + '.png';
+      link.href = canvas.toDataURL('image/png');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
     window.changeColorMode = function(mode) {
       activeColorMode = mode;
       if (!nodeDataSet || currentMode !== 'codebase') return;

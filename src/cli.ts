@@ -1,5 +1,5 @@
-#!/usr/bin/env node
-
+import fs from 'node:fs';
+import path from 'node:path';
 import { Command } from 'commander';
 import { serve } from '@hono/node-server';
 import { loadConfig } from './config.js';
@@ -25,6 +25,7 @@ program
   .description('Start the OGM-Slim HTTP Server and Sigma.js Graph Web Dashboard')
   .option('-p, --port <number>', 'Port number to listen on', '8765')
   .option('-h, --host <string>', 'Host address to bind to', '127.0.0.1')
+  .option('-w, --watch', 'Live watch directory and auto re-index on change')
   .option('-c, --config <string>', 'Path to config JSON file')
   .option('--project <string>', 'Default project ID', 'default')
   .option('--dataset <string>', 'Dataset name to auto-index', 'ogm-slim')
@@ -53,9 +54,9 @@ program
     const codebaseService = new CodebaseService(codebaseRepo);
 
     // Auto-index current directory if enabled
+    const dsName = options.dataset || 'ogm-slim';
     if (config.codebase.auto_index) {
       try {
-        const dsName = options.dataset || 'ogm-slim';
         console.log(`[OGM-Slim] ⚡ Auto-indexing repository at ${process.cwd()} into dataset "${dsName}"...`);
         const stats = await codebaseService.indexDirectory(process.cwd(), config.auth.default_project_id, dsName);
         console.log(
@@ -63,6 +64,34 @@ program
         );
       } catch (err) {
         console.warn(`[OGM-Slim] ⚠️ Auto-index failed:`, err);
+      }
+    }
+
+    // Live file watcher mode
+    if (options.watch) {
+      console.log(`[OGM-Slim] 👁️ Live Watch Mode active on ${process.cwd()}...`);
+      let debounceTimer: NodeJS.Timeout | null = null;
+      try {
+        fs.watch(process.cwd(), { recursive: true }, (eventType: string, filename: string | null) => {
+          if (!filename) return;
+          const fn = String(filename);
+          if (fn.includes('node_modules') || fn.includes('.git') || fn.includes('dist') || fn.includes('build') || fn.includes('.cache')) {
+            return;
+          }
+          if (['.ts', '.tsx', '.js', '.jsx', '.go', '.py', '.rs'].some((ext) => fn.endsWith(ext))) {
+            if (debounceTimer) clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(async () => {
+              try {
+                const reStats = await codebaseService.indexDirectory(process.cwd(), config.auth.default_project_id, dsName);
+                console.log(`[OGM-Slim] 🔄 Re-indexed on file change (${fn}): ${reStats.symbolsCount} symbols in ${reStats.durationMs}ms`);
+              } catch (e) {
+                console.warn('[OGM-Slim] Watch re-index error:', e);
+              }
+            }, 500);
+          }
+        });
+      } catch (e) {
+        console.warn('[OGM-Slim] Warning setting up file watcher:', e);
       }
     }
 
@@ -75,6 +104,7 @@ program
   HTTP Server:     http://${config.server.host}:${config.server.port}
   Graph Dashboard: http://${config.server.host}:${config.server.port}/admin
   Auth Protection: ${config.auth.enabled ? '🔒 ENABLED (API Key / Password required)' : '🔓 DISABLED (Direct open access)'}
+  Watch Mode:      ${options.watch ? '👁️ ACTIVE (Auto-syncs on file changes)' : 'OFF'}
   Database Path:   ${config.database.path}
   Project ID:      ${config.auth.default_project_id}
 ===============================================================
@@ -119,7 +149,51 @@ program
     );
   });
 
-// 4. Harness Commands
+// 4. Export Command
+program
+  .command('export')
+  .description('Export agent memories and provenance evidence to a JSON backup file')
+  .option('-o, --output <path>', 'Output JSON file path', 'ogm-memory-export.json')
+  .option('-p, --project <string>', 'Project ID', 'default')
+  .option('-c, --config <string>', 'Path to config JSON file')
+  .action(async (options) => {
+    const config = loadConfig(options.config);
+    const projectId = options.project || config.auth.default_project_id;
+    const dbManager = new DatabaseManager(config.database.path, config.database.auto_migrate);
+    const memoryRepo = new MemoryRepository(dbManager.getRawDb());
+    const memoryService = new MemoryService(memoryRepo);
+
+    const exportData = memoryService.exportData(projectId);
+    const outPath = path.resolve(options.output);
+    fs.writeFileSync(outPath, JSON.stringify(exportData, null, 2), 'utf8');
+    console.log(`[OGM-Slim] 📦 Exported ${exportData.memories.length} memories & ${exportData.episodes.length} episodes to ${outPath}`);
+  });
+
+// 5. Import Command
+program
+  .command('import <filePath>')
+  .description('Import agent memories from a JSON backup file')
+  .option('-p, --project <string>', 'Target project ID', 'default')
+  .option('-c, --config <string>', 'Path to config JSON file')
+  .action(async (filePath, options) => {
+    const config = loadConfig(options.config);
+    const projectId = options.project || config.auth.default_project_id;
+    const dbManager = new DatabaseManager(config.database.path, config.database.auto_migrate);
+    const memoryRepo = new MemoryRepository(dbManager.getRawDb());
+    const memoryService = new MemoryService(memoryRepo);
+
+    const fullPath = path.resolve(filePath);
+    if (!fs.existsSync(fullPath)) {
+      console.error(`[OGM-Slim] ❌ File not found: ${fullPath}`);
+      process.exit(1);
+    }
+
+    const raw = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+    const result = memoryService.importData(projectId, raw);
+    console.log(`[OGM-Slim] ✅ Successfully imported ${result.importedMemories} new memories and ${result.importedEpisodes} episodes into project "${projectId}"!`);
+  });
+
+// 6. Harness Commands
 const harnessCmd = program.command('harness').description('Manage AI agent harness integrations');
 
 harnessCmd
@@ -148,7 +222,7 @@ harnessCmd
     console.log(result.snippet);
   });
 
-// 5. Stats Command
+// 7. Stats Command
 program
   .command('stats')
   .description('View database metrics and entity counts')
