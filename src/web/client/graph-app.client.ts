@@ -14,38 +14,38 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
 
     // Color Palettes
     const macCommunityPalette = [
-      { background: '#0a84ff', border: '#0071e3', highlight: '#64d2ff' },
-      { background: '#30d158', border: '#24a148', highlight: '#6be585' },
-      { background: '#bf5af2', border: '#9e3fe0', highlight: '#da8fff' },
-      { background: '#ff9f0a', border: '#cc7a00', highlight: '#ffb340' },
-      { background: '#64d2ff', border: '#33b1e6', highlight: '#99e0ff' },
-      { background: '#ff375f', border: '#d62045', highlight: '#ff6685' },
-      { background: '#ffd60a', border: '#cca700', highlight: '#ffe047' },
-      { background: '#ff453a', border: '#d62d24', highlight: '#ff6961' },
-      { background: '#5e5ce6', border: '#4644cc', highlight: '#8382eb' },
-      { background: '#8e8e93', border: '#636366', highlight: '#aeaeb2' },
+      { background: '#0a84ff', border: '#0071e3', highlightBg: '#0071e3', highlightBorder: '#ffffff' },
+      { background: '#30d158', border: '#24a148', highlightBg: '#24a148', highlightBorder: '#ffffff' },
+      { background: '#bf5af2', border: '#9e3fe0', highlightBg: '#9e3fe0', highlightBorder: '#ffffff' },
+      { background: '#ff9f0a', border: '#cc7a00', highlightBg: '#cc7a00', highlightBorder: '#ffffff' },
+      { background: '#64d2ff', border: '#33b1e6', highlightBg: '#33b1e6', highlightBorder: '#ffffff' },
+      { background: '#ff375f', border: '#d62045', highlightBg: '#d62045', highlightBorder: '#ffffff' },
+      { background: '#ffd60a', border: '#cca700', highlightBg: '#cca700', highlightBorder: '#ffffff' },
+      { background: '#ff453a', border: '#d62d24', highlightBg: '#d62d24', highlightBorder: '#ffffff' },
+      { background: '#5e5ce6', border: '#4644cc', highlightBg: '#4644cc', highlightBorder: '#ffffff' },
+      { background: '#8e8e93', border: '#636366', highlightBg: '#636366', highlightBorder: '#ffffff' },
     ];
 
     const macKindColor = {
-      function: { background: '#30d158', border: '#24a148', highlight: { background: '#30d158', border: '#ffffff' } },
-      method: { background: '#64d2ff', border: '#33b1e6', highlight: { background: '#64d2ff', border: '#ffffff' } },
-      struct: { background: '#ff453a', border: '#d62d24', highlight: { background: '#ff453a', border: '#ffffff' } },
-      interface: { background: '#ffd60a', border: '#cca700', highlight: { background: '#ffd60a', border: '#ffffff' } },
-      type: { background: '#bf5af2', border: '#9e3fe0', highlight: { background: '#bf5af2', border: '#ffffff' } },
-      class: { background: '#ff375f', border: '#d62045', highlight: { background: '#ff375f', border: '#ffffff' } },
-      package: { background: '#ff9f0a', border: '#cc7a00', highlight: { background: '#ff9f0a', border: '#ffffff' } },
-      default: { background: '#8e8e93', border: '#636366', highlight: { background: '#8e8e93', border: '#ffffff' } }
+      function: { background: '#30d158', border: '#24a148', highlightBg: '#28b84d', highlightBorder: '#ffffff' },
+      method: { background: '#64d2ff', border: '#33b1e6', highlightBg: '#38bdf8', highlightBorder: '#ffffff' },
+      struct: { background: '#ff453a', border: '#d62d24', highlightBg: '#e0382f', highlightBorder: '#ffffff' },
+      interface: { background: '#ffd60a', border: '#cca700', highlightBg: '#e6be00', highlightBorder: '#ffffff' },
+      type: { background: '#bf5af2', border: '#9e3fe0', highlightBg: '#aa4ae0', highlightBorder: '#ffffff' },
+      class: { background: '#ff375f', border: '#d62045', highlightBg: '#e6274e', highlightBorder: '#ffffff' },
+      package: { background: '#ff9f0a', border: '#cc7a00', highlightBg: '#e68a00', highlightBorder: '#ffffff' },
+      default: { background: '#8e8e93', border: '#636366', highlightBg: '#75757a', highlightBorder: '#ffffff' }
     };
 
     const memoryColors = {
-      bugfix: { background: '#220d11', border: '#ff453a', highlight: { background: '#3b1218', border: '#ffffff' } },
-      decision: { background: '#0b1929', border: '#0a84ff', highlight: { background: '#112b4d', border: '#ffffff' } },
-      procedure: { background: '#0b2014', border: '#30d158', highlight: { background: '#133522', border: '#ffffff' } },
-      research: { background: '#1b0d26', border: '#bf5af2', highlight: { background: '#301545', border: '#ffffff' } },
-      learning: { background: '#211a06', border: '#ffd60a', highlight: { background: '#382c0b', border: '#ffffff' } },
-      preference: { background: '#210b17', border: '#ff375f', highlight: { background: '#3b1127', border: '#ffffff' } },
-      episode: { background: '#0f172a', border: '#38bdf8', highlight: { background: '#1e293b', border: '#ffffff' } },
-      default: { background: '#14141e', border: '#8e8e93', highlight: { background: '#242433', border: '#ffffff' } }
+      bugfix: { background: '#261014', border: '#ff453a', highlightBg: '#45161c', highlightBorder: '#ff6961' },
+      decision: { background: '#0e1c2e', border: '#0a84ff', highlightBg: '#153254', highlightBorder: '#64d2ff' },
+      procedure: { background: '#0e2417', border: '#30d158', highlightBg: '#153d26', highlightBorder: '#6be585' },
+      research: { background: '#21122e', border: '#bf5af2', highlightBg: '#36184d', highlightBorder: '#da8fff' },
+      learning: { background: '#26200a', border: '#ffd60a', highlightBg: '#3d320c', highlightBorder: '#ffe047' },
+      preference: { background: '#260f1b', border: '#ff375f', highlightBg: '#40132b', highlightBorder: '#ff6685' },
+      episode: { background: '#111827', border: '#38bdf8', highlightBg: '#1e293b', highlightBorder: '#7dd3fc' },
+      default: { background: '#181824', border: '#8e8e93', highlightBg: '#29293d', highlightBorder: '#aeaeb2' }
     };
 
     function getCommunityColor(commId) {
@@ -559,8 +559,8 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
           color: {
             background: col.background,
             border: col.border,
-            highlight: { background: col.highlight, border: '#ffffff' },
-            hover: { background: col.highlight, border: '#ffffff' }
+            highlight: { background: col.highlightBg || col.background, border: col.highlightBorder || '#ffffff' },
+            hover: { background: col.highlightBg || col.background, border: col.highlightBorder || '#ffffff' }
           }
         };
       });
@@ -655,8 +655,8 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
           color: {
             background: col.background,
             border: col.border,
-            highlight: { background: col.highlight, border: '#ffffff' },
-            hover: { background: col.highlight, border: '#ffffff' }
+            highlight: { background: col.highlightBg || col.background, border: col.highlightBorder || '#ffffff' },
+            hover: { background: col.highlightBg || col.background, border: col.highlightBorder || '#ffffff' }
           },
           font: {
             color: '#f8fafc',
@@ -751,14 +751,22 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
           color: {
             background: col.background,
             border: col.border,
-            highlight: { background: col.highlight, border: '#ffffff' },
-            hover: { background: col.highlight, border: '#ffffff' }
+            highlight: {
+              background: col.highlightBg || col.background,
+              border: col.highlightBorder || '#ffffff'
+            },
+            hover: {
+              background: col.highlightBg || col.background,
+              border: col.highlightBorder || '#ffffff'
+            }
           },
           font: {
-            color: isMem ? '#ffffff' : '#cbd5e1',
-            size: isMem ? 11 : 9.5,
+            color: isMem ? '#ffffff' : '#e2e8f0',
+            size: isMem ? 11.5 : 10,
             face: isMem ? '"Inter", system-ui, sans-serif' : '"JetBrains Mono", monospace',
-            align: 'center'
+            align: 'center',
+            strokeWidth: 0,
+            bold: { color: '#ffffff' }
           },
           borderWidth: isMem ? 2 : 1.5,
           shapeProperties: {
