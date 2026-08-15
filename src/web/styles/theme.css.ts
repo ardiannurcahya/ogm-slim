@@ -492,6 +492,13 @@ export const themeCss = `
   .mac-badge-evidence { background: #38bdf8; color: #0b0f19; font-weight: 800; border: 1px solid #0284c7; }
   .mac-badge-status-active { background: rgba(48, 209, 88, 0.25); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.35); }
   .mac-badge-status-archived { background: rgba(255, 159, 10, 0.25); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.35); }
+  .mac-badge-neutral,
+  #inspectorBox .mac-badge {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #e2e8f0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    font-weight: 700;
+  }
 
   /* Center Graph Canvas */
   .mac-graph-view {

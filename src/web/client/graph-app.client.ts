@@ -336,15 +336,17 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
       }
 
       if (currentMode === 'codebase') {
-        document.getElementById('insName').innerText = node.label || node.name;
-        document.getElementById('insKind').innerText = node.kind;
-        document.getElementById('insKind').className = 'mac-badge mac-badge-' + node.kind;
-        
-        const cCol = getCommunityColor(node.community_id);
+        const kindEl = document.getElementById('insKind');
         const commEl = document.getElementById('insComm');
+        kindEl.removeAttribute('style');
+        commEl.removeAttribute('style');
+
+        document.getElementById('insName').innerText = node.label || node.name;
+        kindEl.innerText = (node.kind || 'symbol').toUpperCase();
+        kindEl.className = 'mac-badge mac-badge-neutral';
+
         commEl.innerText = 'CLUSTER #' + (node.community_id || 1);
-        commEl.style.background = cCol.background;
-        commEl.style.color = '#ffffff';
+        commEl.className = 'mac-badge mac-badge-neutral';
 
         document.getElementById('insFile').innerText = node.file || node.file_path || '-';
         document.getElementById('metaLabel1').innerText = 'Louvain Cluster';
@@ -381,22 +383,16 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
 
         if (isMem) {
           kindEl.innerText = ('MEMORY: ' + (node.kind || 'typed')).toUpperCase();
-          kindEl.className = 'mac-badge mac-badge-' + (node.kind || 'bugfix');
+          kindEl.className = 'mac-badge mac-badge-neutral';
 
           commEl.innerText = (node.status || 'ACTIVE').toUpperCase();
-          commEl.className = 'mac-badge mac-badge-status-' + (node.status || 'active');
+          commEl.className = 'mac-badge mac-badge-neutral';
         } else {
           kindEl.innerText = ('EPISODE: ' + (node.kind || 'raw')).toUpperCase();
-          if (node.kind === 'error') {
-            kindEl.className = 'mac-badge mac-badge-episode-error';
-          } else if (node.kind === 'diff') {
-            kindEl.className = 'mac-badge mac-badge-episode-diff';
-          } else {
-            kindEl.className = 'mac-badge mac-badge-episode';
-          }
+          kindEl.className = 'mac-badge mac-badge-neutral';
 
           commEl.innerText = 'EVIDENCE';
-          commEl.className = 'mac-badge mac-badge-evidence';
+          commEl.className = 'mac-badge mac-badge-neutral';
         }
 
         document.getElementById('insFile').innerText = 'ID: ' + node.key + ' | ' + (node.created_at || node.observed_at || '');

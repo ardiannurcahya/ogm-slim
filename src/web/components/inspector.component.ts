@@ -10,8 +10,8 @@ export function renderContractInspector(): string {
     <div class="mac-inspector-body" id="inspectorBox">
       <div>
         <div style="display:flex;align-items:center;gap:0.35rem;margin-bottom:0.35rem;flex-wrap:wrap">
-          <span class="mac-badge mac-badge-decision" id="insKind">SELECT NODE</span>
-          <span class="mac-badge mac-badge-evidence" id="insComm">STATUS -</span>
+          <span class="mac-badge mac-badge-neutral" id="insKind">SELECT NODE</span>
+          <span class="mac-badge mac-badge-neutral" id="insComm">STATUS -</span>
         </div>
         <h2 id="insName" style="margin:0.2rem 0;font-size:0.95rem;font-family:var(--mac-mono);font-weight:700;word-break:break-all;overflow-wrap:anywhere;color:var(--mac-text);line-height:1.35">Click any node in graph</h2>
         <div id="insFile" style="font-size:0.72rem;color:var(--mac-text-muted);word-break:break-all;overflow-wrap:anywhere">Location will show here</div>
