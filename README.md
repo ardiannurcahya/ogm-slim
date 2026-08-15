@@ -3,7 +3,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue.svg)](https://www.typescriptlang.org/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-Official%20SDK%20(12%20Tools)-purple.svg)](https://modelcontextprotocol.io/)
 [![SQLite](https://img.shields.io/badge/SQLite-WAL%20%2B%20FTS5-green.svg)](https://sqlite.org/)
-[![Visualizer](https://img.shields.io/badge/UI-Interactive%20Graph%20Canvas-black.svg)](http://127.0.0.1:8080/admin)
+[![Visualizer](https://img.shields.io/badge/UI-Interactive%20Graph%20Canvas-black.svg)](http://127.0.0.1:8765/admin)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **OGM-Slim** is an ultra-lightweight, zero-configuration operational memory service and AST codebase knowledge graph engine designed specifically for AI coding agents (**Claude Code**, **Google Antigravity**, **OpenCode**, **Cursor**, **Windsurf**).
@@ -31,7 +31,7 @@
 npx ogm-slim serve
 
 # Open in browser:
-# http://127.0.0.1:8080/admin
+# http://127.0.0.1:8765/admin
 ```
 
 ### 2. Configure MCP for Your AI Coding Agent
@@ -48,7 +48,7 @@ npx ogm-slim harness install opencode --apply
 
 ### 3. CLI Commands
 ```bash
-ogm-slim serve -p 8080                    # Start web server & UI
+ogm-slim serve -p 8765                    # Start web server & UI
 ogm-slim mcp                              # Run MCP over Stdio
 ogm-slim index ./my-repo -d "frontend"    # Index codebase into isolated dataset
 ogm-slim stats                            # Show database metrics
@@ -78,7 +78,7 @@ ogm-slim harness print claude             # Print MCP config snippet
 
 ## 🎨 Interactive Graph Canvas
 
-Navigate to `http://127.0.0.1:8080/admin` to explore:
+Navigate to `http://127.0.0.1:8765/admin` to explore:
 - **Dataset Switcher**: Toggle between multiple indexed codebases with 1 click.
 - **Interactive Force Physics**: Zoom, pan, drag nodes, smooth spring physics, fit-to-screen.
 - **Dual Palette Switcher**: Color nodes by **Symbol Kind** (Function, Method, Struct, Class, Interface, Type) or **Louvain Modularity Cluster**.

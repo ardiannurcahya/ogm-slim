@@ -133,6 +133,6 @@ Search, inspect, and analyze codebase structure without consuming excessive LLM 
 
 ## 🌐 Web Dashboard & Interactive Graph Canvas
 
-Access the visual web dashboard at `http://127.0.0.1:8080/admin`:
+Access the visual web dashboard at `http://127.0.0.1:8765/admin`:
 * **Mode 1 — 🌳 Codebase Graph**: Interactive ForceAtlas2 physics canvas, Symbol Explorer, and Contract Inspector.
 * **Mode 2 — 🧠 Agent Memory Graph**: Visual map connecting durable typed memories to cited evidence episodes with clickable provenance navigation chips.

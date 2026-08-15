@@ -23,7 +23,7 @@ program
 program
   .command('serve')
   .description('Start the OGM-Slim HTTP Server and Sigma.js Graph Web Dashboard')
-  .option('-p, --port <number>', 'Port number to listen on', '8080')
+  .option('-p, --port <number>', 'Port number to listen on', '8765')
   .option('-h, --host <string>', 'Host address to bind to', '127.0.0.1')
   .option('-c, --config <string>', 'Path to config JSON file')
   .option('--project <string>', 'Default project ID', 'default')

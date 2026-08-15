@@ -52,7 +52,7 @@ OGM-Slim is a zero-latency, SQLite-backed operational memory service and AST cod
 
 ## 🌐 Web Visualization UI
 Direct interactive graph visualization dashboard (Codebase Graph & Agent Memory Graph) is live at:
-\`http://127.0.0.1:8080/admin\` or \`http://127.0.0.1:8080/graph\`
+\`http://127.0.0.1:8765/admin\` or \`http://127.0.0.1:8765/graph\`
 `;
 }
 
