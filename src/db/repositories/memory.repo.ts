@@ -366,11 +366,18 @@ export class MemoryRepository {
     const memCount = (this.db.prepare('SELECT count(*) as c FROM memories WHERE project_id = ?').get(projectId) as any)?.c || 0;
     const epCount = (this.db.prepare('SELECT count(*) as c FROM episodes WHERE project_id = ?').get(projectId) as any)?.c || 0;
     const symCount = (this.db.prepare('SELECT count(*) as c FROM symbols WHERE project_id = ?').get(projectId) as any)?.c || 0;
+    const datasets = this.db.prepare('SELECT id, name, files_count, symbols_count, edges_count FROM datasets WHERE project_id = ?').all(projectId) as any[];
     return {
       project_id: projectId,
       memories_count: memCount,
       episodes_count: epCount,
       symbols_count: symCount,
+      datasets: datasets.map((d) => ({
+        name: d.name,
+        files: d.files_count,
+        symbols: d.symbols_count,
+        edges: d.edges_count,
+      })),
     };
   }
 

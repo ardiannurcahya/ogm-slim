@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import fs from 'node:fs';
 import path from 'node:path';
 import { Command } from 'commander';
@@ -233,7 +235,22 @@ program
     const dbManager = new DatabaseManager(config.database.path, config.database.auto_migrate);
     const memoryRepo = new MemoryRepository(dbManager.getRawDb());
     const stats = memoryRepo.getStats(projectId);
-    console.table(stats);
+
+    console.log(`\n📊 [OGM-Slim] Project Metrics: "${projectId}"`);
+    console.table([
+      {
+        'Project ID': stats.project_id,
+        'Active Memories': stats.memories_count,
+        'Evidence Episodes': stats.episodes_count,
+        'Total Symbols': stats.symbols_count,
+        'Total Datasets': stats.datasets.length,
+      },
+    ]);
+
+    if (stats.datasets && stats.datasets.length > 0) {
+      console.log(`\n🗂️ [OGM-Slim] Codebase Datasets Breakdown:`);
+      console.table(stats.datasets);
+    }
   });
 
 program.parse(process.argv);
