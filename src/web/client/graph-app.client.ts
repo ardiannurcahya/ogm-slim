@@ -38,14 +38,14 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
     };
 
     const memoryColors = {
-      bugfix: { background: '#ff453a', border: '#d62d24', highlight: '#ff6961' },
-      decision: { background: '#0a84ff', border: '#0071e3', highlight: '#64d2ff' },
-      procedure: { background: '#30d158', border: '#24a148', highlight: '#6be585' },
-      research: { background: '#bf5af2', border: '#9e3fe0', highlight: '#da8fff' },
-      learning: { background: '#ffd60a', border: '#cca700', highlight: '#ffe047' },
-      preference: { background: '#ff375f', border: '#d62045', highlight: '#ff6685' },
-      episode: { background: '#3a3a44', border: '#64d2ff', highlight: '#99e0ff' },
-      default: { background: '#8e8e93', border: '#636366', highlight: '#aeaeb2' }
+      bugfix: { background: '#241014', border: '#ff453a', highlight: '#ff6961' },
+      decision: { background: '#0e1c2e', border: '#0a84ff', highlight: '#64d2ff' },
+      procedure: { background: '#0e2417', border: '#30d158', highlight: '#6be585' },
+      research: { background: '#21122e', border: '#bf5af2', highlight: '#da8fff' },
+      learning: { background: '#26200a', border: '#ffd60a', highlight: '#ffe047' },
+      preference: { background: '#260f1b', border: '#ff375f', highlight: '#ff6685' },
+      episode: { background: '#111827', border: '#38bdf8', highlight: '#7dd3fc' },
+      default: { background: '#181824', border: '#8e8e93', highlight: '#aeaeb2' }
     };
 
     function getCommunityColor(commId) {
@@ -728,38 +728,76 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
       renderVisNetwork(container, raw.nodes.map(n => {
         const isMem = n.node_type === 'memory';
         const col = memoryColors[n.kind] || (isMem ? memoryColors.decision : memoryColors.episode);
+        const cleanTitle = n.label || '';
+        const shortTitle = cleanTitle.length > 32 ? cleanTitle.slice(0, 30) + '...' : cleanTitle;
+        const formattedLabel = isMem
+          ? '[' + (n.kind || 'MEMORY').toUpperCase() + ']\n' + shortTitle
+          : 'Evidence:\n' + (cleanTitle.length > 28 ? cleanTitle.slice(0, 26) + '...' : cleanTitle);
+
         return {
           id: n.key,
-          label: n.label,
-          title: (isMem ? 'Memory: ' : 'Episode: ') + n.label,
-          shape: isMem ? 'box' : 'ellipse',
-          margin: isMem ? 8 : undefined,
-          size: isMem ? 22 : 14,
+          label: formattedLabel,
+          title: (isMem ? 'Memory: ' : 'Episode: ') + cleanTitle,
+          shape: 'box',
+          margin: isMem ? { top: 8, bottom: 8, left: 14, right: 14 } : { top: 6, bottom: 6, left: 12, right: 12 },
           color: {
             background: col.background,
             border: col.border,
             highlight: { background: col.highlight, border: '#ffffff' },
             hover: { background: col.highlight, border: '#ffffff' }
           },
-          font: { color: '#ffffff', size: isMem ? 12 : 10, face: '"SF Pro Text", system-ui, sans-serif' },
-          borderWidth: isMem ? 2 : 1,
-          shapeProperties: { borderDashes: !isMem },
-          shadow: { enabled: true, color: 'rgba(0,0,0,0.5)', size: 6, x: 2, y: 2 }
+          font: {
+            color: isMem ? '#ffffff' : '#cbd5e1',
+            size: isMem ? 11 : 9.5,
+            face: isMem ? '"Inter", system-ui, sans-serif' : '"JetBrains Mono", monospace',
+            align: 'center'
+          },
+          borderWidth: isMem ? 2 : 1.5,
+          shapeProperties: {
+            borderRadius: isMem ? 8 : 16,
+            borderDashes: isMem ? false : [4, 4]
+          },
+          shadow: {
+            enabled: true,
+            color: 'rgba(0, 0, 0, 0.65)',
+            size: isMem ? 8 : 4,
+            x: 0,
+            y: 3
+          }
         };
       }), raw.edges.map(e => ({
         from: e.source,
         to: e.target,
-        arrows: 'to',
-        label: e.relation || 'evidence',
-        font: { color: 'rgba(255, 255, 255, 0.45)', size: 9, align: 'middle' },
-        color: { color: 'rgba(100, 210, 255, 0.35)', highlight: '#64d2ff', hover: '#64d2ff' },
-        width: 1.5,
-        dashes: true,
-        smooth: { type: 'cubicBezier' }
-      })));
+        arrows: { to: { enabled: true, scaleFactor: 0.8, type: 'arrow' } },
+        label: ' cites ',
+        font: {
+          color: '#64748b',
+          size: 9,
+          face: '"JetBrains Mono", monospace',
+          background: '#09090c',
+          strokeWidth: 0,
+          align: 'middle'
+        },
+        color: { color: 'rgba(56, 189, 248, 0.45)', highlight: '#38bdf8', hover: '#38bdf8' },
+        width: 1.8,
+        dashes: [5, 5],
+        smooth: { type: 'curvedCW', roundness: 0.15 }
+      })), {
+        physics: {
+          solver: 'forceAtlas2Based',
+          forceAtlas2Based: {
+            gravitationalConstant: -90,
+            centralGravity: 0.006,
+            springLength: 150,
+            springConstant: 0.04,
+            damping: 0.55,
+            avoidOverlap: 1
+          }
+        }
+      });
     }
 
-    function renderVisNetwork(container, visNodes, visEdges) {
+    function renderVisNetwork(container, visNodes, visEdges, customOptions = {}) {
       if (typeof vis === 'undefined') {
         container.innerHTML = '<div style="color:var(--mac-text-muted);padding:2rem;text-align:center">Loading visualizer...</div>';
         return;
@@ -768,7 +806,7 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
       nodeDataSet = new vis.DataSet(visNodes);
       edgeDataSet = new vis.DataSet(visEdges);
 
-      const options = {
+      const baseOptions = {
         interaction: {
           hover: true,
           tooltipDelay: 100,
@@ -789,6 +827,20 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
             enabled: true,
             iterations: 120,
             updateInterval: 25
+          }
+        }
+      };
+
+      const options = {
+        ...baseOptions,
+        ...customOptions,
+        interaction: { ...baseOptions.interaction, ...(customOptions.interaction || {}) },
+        physics: {
+          ...baseOptions.physics,
+          ...(customOptions.physics || {}),
+          forceAtlas2Based: {
+            ...baseOptions.physics.forceAtlas2Based,
+            ...((customOptions.physics && customOptions.physics.forceAtlas2Based) || {})
           }
         }
       };
