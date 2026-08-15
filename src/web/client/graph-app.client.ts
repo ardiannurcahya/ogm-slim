@@ -416,7 +416,7 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
 
         document.getElementById('insPanelTitle3').innerText = isMem ? 'Supporting Evidence Episodes (Citations)' : 'Linked References';
         if (isMem && node.origin_ids && node.origin_ids.length > 0) {
-          document.getElementById('insCalls').innerHTML = node.origin_ids.map(id => '<span class="mac-chip" onclick="jumpToNode(\\'' + id + '\\')">📎 ' + id.slice(0, 12) + '...</span>').join(' ');
+          document.getElementById('insCalls').innerHTML = node.origin_ids.map(id => '<span class="mac-chip" onclick="jumpToNode(\\'' + id + '\\')">' + id.slice(0, 12) + '...</span>').join(' ');
         } else if (!isMem) {
           document.getElementById('insCalls').innerHTML = '<span style="color:var(--mac-text-muted)">Immutable provenance episode</span>';
         } else {

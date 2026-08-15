@@ -34,15 +34,14 @@ export function renderGraphPage(projectId: string, authEnabled: boolean = false)
     ${renderContractInspector()}
   </div>
 
-  <!-- Login Modal Overlay (Active when auth is enabled and unauthenticated) -->
+  <!-- Login Modal Overlay -->
   <div id="loginModalOverlay" class="mac-login-overlay" style="display:none">
     <div class="mac-login-card">
       <div class="mac-login-title">
-        <span>🔐</span>
-        <span>OGM-Slim Authentication</span>
+        <span>Authentication Required</span>
       </div>
       <p style="font-size:0.8rem;color:var(--mac-text-secondary);line-height:1.4">
-        Protected operational memory service. Enter your admin password or API key to access.
+        Enter your admin password or API key to access this dashboard.
       </p>
       <div id="loginErrorMsg" class="mac-login-error"></div>
       <form onsubmit="handleLoginSubmit(event)" style="display:flex;flex-direction:column;gap:0.8rem">
@@ -51,7 +50,7 @@ export function renderGraphPage(projectId: string, authEnabled: boolean = false)
           <input type="password" id="loginKeyInput" class="mac-input" placeholder="Enter API key or password" autofocus required style="padding:0.5rem 0.75rem;font-size:0.9rem">
         </div>
         <button type="submit" class="mac-btn mac-btn-primary" style="padding:0.5rem;font-size:0.88rem;justify-content:center">
-          Unlock Dashboard &rarr;
+          Unlock Dashboard
         </button>
       </form>
     </div>

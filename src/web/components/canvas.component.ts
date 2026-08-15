@@ -5,8 +5,8 @@ export function renderGraphCanvas(): string {
       <button class="mac-hud-btn" id="btnZoomIn" title="Zoom In">+</button>
       <button class="mac-hud-btn" id="btnZoomOut" title="Zoom Out">&minus;</button>
       <button class="mac-hud-btn" id="btnReset" title="Fit View">Fit</button>
-      <button class="mac-hud-btn" id="btnRelayout" title="Relayout">⚡ Settle</button>
-      <button class="mac-hud-btn" id="btnExportPng" onclick="exportGraphPng()" title="Export PNG Screenshot">📸 Export PNG</button>
+      <button class="mac-hud-btn" id="btnRelayout" title="Relayout">Settle</button>
+      <button class="mac-hud-btn" id="btnExportPng" onclick="exportGraphPng()" title="Export PNG Screenshot">Export PNG</button>
       <select id="colorModeSelect" class="mac-select" onchange="changeColorMode(this.value)" style="padding:0.25rem 0.4rem;font-size:0.78rem">
         <option value="kind">Palette: Symbol Kind</option>
         <option value="louvain">Palette: Louvain Modularity</option>

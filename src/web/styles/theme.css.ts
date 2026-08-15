@@ -121,8 +121,19 @@ export const themeCss = `
     color: var(--mac-text);
     display: flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.4rem;
     white-space: nowrap;
+  }
+
+  .mac-brand-mark {
+    background: var(--mac-accent);
+    color: #ffffff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 0.15rem 0.38rem;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+    font-family: var(--mac-mono);
   }
 
   .mac-title-right {
