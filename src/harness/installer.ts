@@ -31,7 +31,7 @@ OGM-Slim provides persistent, project-scoped operational memory and fast AST cod
      - \`procedure\`: \`{ name, steps, prerequisites }\`
      - \`research\`: \`{ question, finding, sources }\`
 
-## 🛠️ MCP Tools Reference (11 Tools)
+## 🛠️ MCP Tools Reference (12 Tools)
 
 | Tool | Purpose | Primary Arguments |
 |:---|:---|:---|
@@ -41,7 +41,8 @@ OGM-Slim provides persistent, project-scoped operational memory and fast AST cod
 | \`memory_feedback\` | Confirm/reject/supersede/stale memory | \`memory_id\`, \`kind\`, \`detail\` |
 | \`memory_forget\` | Archive or invalidate memory | \`memory_id\`, \`mode\` |
 | \`memory_inspect\` | Inspect provenance and history | \`memory_id\` |
-| \`codebase_index\` | Scan and index repository directory | \`path\`, \`incremental\` |
+| \`codebase_list_datasets\` | List all indexed codebase datasets | (none) |
+| \`codebase_index\` | Scan and index repository directory | \`path\`, \`dataset\`, \`incremental\` |
 | \`codebase_find_symbol\` | Find functions, structs, classes, types | \`query\`, \`kind\`, \`file\`, \`limit\` |
 | \`codebase_call_graph\` | Trace 1-3 hop callers/callees | \`symbol_key\`, \`direction\`, \`depth\` |
 | \`codebase_impact_analysis\` | Downstream blast radius analysis | \`symbol_key\` |

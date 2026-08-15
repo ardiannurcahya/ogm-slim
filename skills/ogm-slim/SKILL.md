@@ -33,7 +33,7 @@ OGM-Slim is a zero-latency, SQLite-backed operational memory service and AST cod
 
 ---
 
-## 🛠️ MCP Tools Reference (11 Tools)
+## 🛠️ MCP Tools Reference (12 Tools)
 
 ### 1. `memory_recall`
 Recall durable memory capsules using natural language semantic matching or exact metadata filters.
@@ -85,13 +85,19 @@ Read deep provenance, citation chain, feedback history, and audit log for a memo
 - **Parameters**:
   - `memory_id` *(string, required)*: Target memory ID.
 
-### 7. `codebase_index`
+### 7. `codebase_list_datasets`
+List all indexed codebase datasets, their file counts, symbols, and relation metrics.
+- **Parameters**:
+  - *No required parameters*.
+
+### 8. `codebase_index`
 Scan and index a directory into the AST symbol graph.
 - **Parameters**:
   - `path` *(string, default ".")*: Root directory to index.
+  - `dataset` *(string, optional)*: Custom dataset name.
   - `incremental` *(boolean, default true)*: Run incrementally.
 
-### 8. `codebase_find_symbol`
+### 9. `codebase_find_symbol`
 Find functions, methods, structs, interfaces, and classes without reading entire files.
 - **Parameters**:
   - `query` *(string, optional)*: Symbol name or substring.
@@ -99,19 +105,19 @@ Find functions, methods, structs, interfaces, and classes without reading entire
   - `file` *(string, optional)*: File path substring.
   - `limit` *(integer, default 20)*: Max results.
 
-### 9. `codebase_call_graph`
+### 10. `codebase_call_graph`
 Trace 1 to 3 hops of callers and callees for any symbol.
 - **Parameters**:
   - `symbol_key` *(string, required)*: Symbol name or key (e.g. `src/auth.ts:login`).
   - `direction` *(string, default "both")*: `callers` | `callees` | `both`
   - `depth` *(integer, default 1, max 3)*: Traversal depth.
 
-### 10. `codebase_impact_analysis`
+### 11. `codebase_impact_analysis`
 Calculate the downstream blast radius and affected files before making changes.
 - **Parameters**:
   - `symbol_key` *(string, required)*: Symbol name or key.
 
-### 11. `codebase_file_summary`
+### 12. `codebase_file_summary`
 Get an instant structural summary of any file (symbols, line ranges, signatures).
 - **Parameters**:
   - `file` *(string, required)*: Relative file path.
