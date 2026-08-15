@@ -12,13 +12,15 @@ export function renderHeader(): string {
         <span>OGM-Slim</span>
       </div>
       <div class="mac-tabs">
-        <button class="mac-tab-btn active" id="tabCodebase" onclick="switchGraphMode('codebase')">🌳 Codebase Graph</button>
-        <button class="mac-tab-btn" id="tabMemory" onclick="switchGraphMode('memory')">🧠 Agent Memory Graph</button>
+        <button class="mac-tab-btn active" id="tabCodebase" onclick="switchGraphMode('codebase')">🌳 Codebase</button>
+        <button class="mac-tab-btn" id="tabMemory" onclick="switchGraphMode('memory')">🧠 Memory</button>
       </div>
     </div>
     <div class="mac-title-right">
+      <button class="mac-btn mac-mobile-drawer-toggle" id="btnToggleExplorer" onclick="toggleSidebar('explorer')" title="Toggle Explorer">📁 Explorer</button>
+      <button class="mac-btn mac-mobile-drawer-toggle" id="btnToggleInspector" onclick="toggleSidebar('inspector')" title="Toggle Inspector Details">ℹ️ Details</button>
       <button id="authLogoutBtn" class="mac-btn" onclick="handleLogout()" style="display:none">Logout</button>
-      <a href="javascript:location.reload()" class="mac-btn">Refresh</a>
+      <a href="javascript:location.reload()" class="mac-btn" title="Reload Page">⟳</a>
     </div>
   </header>`;
 }

@@ -1,10 +1,13 @@
 export function renderSymbolExplorer(): string {
   return `
-  <div class="mac-col">
+  <div class="mac-col mac-col-left" id="explorerCol">
     <div class="mac-col-header">
       <div class="mac-section-title">
         <span id="explorerTitle">Symbols</span>
-        <span id="symFilteredCount" style="color:var(--mac-accent)">-</span>
+        <div style="display:flex;align-items:center;gap:0.4rem">
+          <span id="symFilteredCount" style="color:var(--mac-accent);font-family:var(--mac-mono);font-size:0.75rem">-</span>
+          <button class="mac-drawer-close" onclick="toggleSidebar('explorer')" title="Close Drawer">&times;</button>
+        </div>
       </div>
       <div class="mac-search-box">
         <span class="mac-search-icon">🔍</span>
@@ -30,14 +33,14 @@ export function renderSymbolExplorer(): string {
       <!-- Memory Filters -->
       <div id="memoryFilters" style="display:none;gap:0.3rem">
         <select id="memKindFilter" class="mac-select" onchange="filterExplorerItems()" style="flex:1">
-          <option value="">All Memory Types</option>
+          <option value="">All Types</option>
           <option value="bugfix">Bugfix</option>
           <option value="decision">Decision</option>
           <option value="procedure">Procedure</option>
           <option value="research">Research</option>
           <option value="learning">Learning</option>
           <option value="preference">Preference</option>
-          <option value="episode">Episode (Evidence)</option>
+          <option value="episode">Episode</option>
         </select>
         <select id="memStatusFilter" class="mac-select" onchange="filterExplorerItems()" style="flex:1">
           <option value="">All Statuses</option>

@@ -28,6 +28,7 @@ export function renderGraphPage(projectId: string, authEnabled: boolean = false)
   ${renderHeader()}
   ${renderToolbar(projectId)}
   <div class="mac-layout">
+    <div id="drawerBackdrop" class="mac-drawer-backdrop" onclick="closeAllDrawers()"></div>
     ${renderSymbolExplorer()}
     ${renderGraphCanvas()}
     ${renderContractInspector()}

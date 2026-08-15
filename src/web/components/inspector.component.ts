@@ -1,17 +1,20 @@
 export function renderContractInspector(): string {
   return `
-  <div class="mac-col">
+  <div class="mac-col mac-col-right" id="inspectorCol">
     <div class="mac-col-header">
-      <div class="mac-section-title">Inspector</div>
+      <div class="mac-section-title">
+        <span>Inspector</span>
+        <button class="mac-drawer-close" onclick="toggleSidebar('inspector')" title="Close Drawer">&times;</button>
+      </div>
     </div>
     <div class="mac-inspector-body" id="inspectorBox">
       <div>
-        <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.4rem">
+        <div style="display:flex;align-items:center;gap:0.35rem;margin-bottom:0.35rem;flex-wrap:wrap">
           <span class="mac-badge" id="insKind" style="background:#0a84ff;color:#ffffff">SELECT NODE</span>
           <span class="mac-badge" id="insComm" style="background:#2c2c34;color:#ffffff">CLUSTER -</span>
         </div>
-        <h2 id="insName" style="margin:0.2rem 0;font-size:1.05rem;font-family:var(--mac-mono);font-weight:700;word-break:break-all;color:var(--mac-text)">Click any node in graph</h2>
-        <div id="insFile" style="font-size:0.75rem;color:var(--mac-text-muted)">Location will show here</div>
+        <h2 id="insName" style="margin:0.2rem 0;font-size:0.95rem;font-family:var(--mac-mono);font-weight:700;word-break:break-all;overflow-wrap:anywhere;color:var(--mac-text);line-height:1.35">Click any node in graph</h2>
+        <div id="insFile" style="font-size:0.72rem;color:var(--mac-text-muted);word-break:break-all;overflow-wrap:anywhere">Location will show here</div>
       </div>
 
       <div class="mac-meta-card">
@@ -34,18 +37,18 @@ export function renderContractInspector(): string {
       </div>
 
       <div>
-        <div id="insPanelTitle1" style="font-size:0.72rem;color:var(--mac-text-muted);margin-bottom:0.35rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">Type Signature</div>
+        <div id="insPanelTitle1" style="font-size:0.7rem;color:var(--mac-text-muted);margin-bottom:0.3rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">Type Signature</div>
         <pre class="mac-code-panel" id="insSig">// Select a node to view details</pre>
       </div>
 
       <div>
-        <div id="insPanelTitle2" style="font-size:0.72rem;color:var(--mac-text-muted);margin-bottom:0.35rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">Contract & Comments</div>
+        <div id="insPanelTitle2" style="font-size:0.7rem;color:var(--mac-text-muted);margin-bottom:0.3rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">Contract & Comments</div>
         <div class="mac-doc-panel" id="insDoc">No node selected.</div>
       </div>
 
       <div>
-        <div id="insPanelTitle3" style="font-size:0.72rem;color:var(--mac-text-muted);margin-bottom:0.35rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">Outgoing Callees / Citations</div>
-        <div id="insCalls" style="font-size:0.8rem;color:var(--mac-text);margin-top:0.2rem">-</div>
+        <div id="insPanelTitle3" style="font-size:0.7rem;color:var(--mac-text-muted);margin-bottom:0.3rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">Outgoing Callees / Citations</div>
+        <div id="insCalls" style="font-size:0.78rem;color:var(--mac-text);margin-top:0.2rem;display:flex;flex-wrap:wrap;gap:3px">-</div>
       </div>
     </div>
   </div>`;

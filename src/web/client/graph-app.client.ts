@@ -425,6 +425,43 @@ export function renderClientScript(projectId: string, authEnabled: boolean = fal
       }
     }
 
+    window.toggleSidebar = function(side) {
+      const backdrop = document.getElementById('drawerBackdrop');
+      const leftCol = document.getElementById('explorerCol');
+      const rightCol = document.getElementById('inspectorCol');
+
+      if (side === 'explorer') {
+        const isOpen = leftCol && leftCol.classList.contains('open');
+        if (isOpen) {
+          leftCol.classList.remove('open');
+          if (backdrop) backdrop.classList.remove('active');
+        } else {
+          if (leftCol) leftCol.classList.add('open');
+          if (rightCol) rightCol.classList.remove('open');
+          if (backdrop) backdrop.classList.add('active');
+        }
+      } else if (side === 'inspector') {
+        const isOpen = rightCol && rightCol.classList.contains('open');
+        if (isOpen) {
+          rightCol.classList.remove('open');
+          if (backdrop) backdrop.classList.remove('active');
+        } else {
+          if (rightCol) rightCol.classList.add('open');
+          if (leftCol) leftCol.classList.remove('open');
+          if (backdrop) backdrop.classList.add('active');
+        }
+      }
+    };
+
+    window.closeAllDrawers = function() {
+      const backdrop = document.getElementById('drawerBackdrop');
+      const leftCol = document.getElementById('explorerCol');
+      const rightCol = document.getElementById('inspectorCol');
+      if (leftCol) leftCol.classList.remove('open');
+      if (rightCol) rightCol.classList.remove('open');
+      if (backdrop) backdrop.classList.remove('active');
+    };
+
     window.jumpToNode = function(nodeLabelOrKey) {
       let targetNode = nodeDataMap.get(nodeLabelOrKey);
       if (!targetNode) {
