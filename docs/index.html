@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OGM-Slim — High-Performance Memory & Codebase Knowledge Graph for AI Agents</title>
+  <meta name="description" content="Persistent AST knowledge graph, bi-temporal memory engine, and native MCP server for Claude Desktop, Cursor, Antigravity, and autonomous AI coding agents.">
+  <meta name="keywords" content="mcp, model context protocol, ai agent, persistent memory, knowledge graph, ast, tree-sitter, claude, cursor">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="OGM-Slim — Persistent Memory & Knowledge Graph for AI Agents">
+  <meta property="og:description" content="Give your AI coding agents permanent memory, cross-file AST knowledge graphs, and zero context window amnesia.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://github.com/ardiannurcahya/ogm-slim">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Background Glow & Mesh -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <!-- Header Navigation -->
+  <header class="site-header">
+    <div class="header-container">
+      <a href="#" class="brand-logo">
+        <span class="brand-badge">OGM</span>
+        <span class="brand-title">Slim</span>
+      </a>
+      
+      <nav class="nav-menu">
+        <a href="#features">Features</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#mcp">MCP Server</a>
+        <a href="#quickstart">Quickstart</a>
+        <a href="#compare">Comparison</a>
+      </nav>
+
+      <div class="header-actions">
+        <a href="https://github.com/ardiannurcahya/ogm-slim" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          <span>Star on GitHub</span>
+        </a>
+        <a href="#quickstart" class="btn btn-primary btn-sm">Get Started</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-container">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        <span>Version 1.0 Production-Ready &bull; 100% Local SQLite</span>
+      </div>
+
+      <h1 class="hero-title">
+        Permanent Memory & Codebase Knowledge Graphs for <span class="gradient-text">AI Coding Agents</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Eliminate context window amnesia. OGM-Slim combines Tree-Sitter AST call-graph indexing with bi-temporal episodic memory ranking to empower Claude Desktop, Cursor, and autonomous AI agents with instant, high-precision recall.
+      </p>
+
+      <div class="hero-install-box">
+        <div class="install-code">
+          <span class="code-prompt">$</span>
+          <code id="npmInstallCmd">npm install -g ogm-slim</code>
+        </div>
+        <button class="copy-btn" onclick="copyInstallCmd()" id="btnCopyInstall" title="Copy to clipboard">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          <span id="copyText">Copy</span>
+        </button>
+      </div>
+
+      <div class="hero-cta-group">
+        <a href="#quickstart" class="btn btn-primary btn-lg">
+          <span>Get Started in 60s</span>
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </a>
+        <a href="#mcp" class="btn btn-secondary btn-lg">Explore 12 Native MCP Tools</a>
+      </div>
+
+      <!-- Hero Visual Preview Window -->
+      <div class="hero-mockup-frame">
+        <div class="mockup-header">
+          <div class="traffic-lights">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <div class="mockup-title">OGM-Slim Knowledge Graph & Memory Visualizer</div>
+          <div class="mockup-tab-pill">
+            <button class="tab-switch active" onclick="switchHeroMockup('codebase', this)">Codebase Graph</button>
+            <button class="tab-switch" onclick="switchHeroMockup('memory', this)">Agent Memory</button>
+          </div>
+        </div>
+        <div class="mockup-body" id="heroMockupBody">
+          <!-- Interactive Preview Visualizer -->
+          <div class="mockup-canvas-area" id="mockupCanvas">
+            <div class="mockup-grid-hud">
+              <span class="hud-pill">Dataset: <strong>default</strong></span>
+              <span class="hud-pill"><strong>129</strong> symbols</span>
+              <span class="hud-pill"><strong>210</strong> relations</span>
+              <span class="hud-pill"><strong>10</strong> clusters</span>
+            </div>
+            <!-- Canvas Animated Nodes -->
+            <div class="canvas-nodes-demo" id="canvasNodesDemo">
+              <!-- Dynamically populated or SVG nodes -->
+            </div>
+          </div>
+          <div class="mockup-sidebar-preview">
+            <div class="sidebar-header">
+              <span class="badge-tag">INSPECTOR</span>
+              <span class="badge-tag">CLUSTER #2</span>
+            </div>
+            <div class="sidebar-symbol-title" id="mockupSidebarTitle">ParallelASTParser.parseDirectory()</div>
+            <div class="sidebar-file-loc" id="mockupSidebarLoc">src/ast/parallel-parser.ts:42</div>
+            <div class="sidebar-meta-grid">
+              <div class="meta-item">
+                <span class="meta-k">Centrality</span>
+                <span class="meta-v highlight-yellow">0.0842</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-k">Degree</span>
+                <span class="meta-v highlight-green">14</span>
+              </div>
+            </div>
+            <div class="sidebar-section-lbl">Type Signature</div>
+            <pre class="sidebar-code-block" id="mockupSidebarCode">async parseDirectory(dir: string, opts?: ParseOptions): Promise<ASTGraph></pre>
+            <div class="sidebar-section-lbl">Contract & Rationale</div>
+            <div class="sidebar-doc-block" id="mockupSidebarDoc">Worker thread pool parallel AST analysis with SHA-256 incremental hashing cache.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Value Metrics Bar -->
+  <section class="metrics-bar">
+    <div class="metrics-container">
+      <div class="metric-card">
+        <div class="metric-value">&lt; 5ms</div>
+        <div class="metric-label">Graph Query & Hybrid Search Latency</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">100% Local</div>
+        <div class="metric-label">Embedded SQLite WAL &bull; Zero External DBs</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">12 Native Tools</div>
+        <div class="metric-label">Standard Model Context Protocol (MCP 1.5)</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">10+ Languages</div>
+        <div class="metric-label">Parallel Tree-Sitter AST Call-Graph Engine</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Core Features Section -->
+  <section class="features-section" id="features">
+    <div class="section-container">
+      <div class="section-badge">ENGINEERING EXCELLENCE</div>
+      <h2 class="section-title">Built for Serious AI Pair Programming</h2>
+      <p class="section-subtitle">Everything your AI agent needs to understand massive multi-package codebases and maintain continuous operational learnings.</p>
+
+      <div class="features-grid">
+        <!-- Feature 1 -->
+        <div class="feature-card">
+          <div class="feature-icon feature-icon-blue">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+          </div>
+          <h3 class="feature-title">Cross-File AST Call Graph</h3>
+          <p class="feature-desc">
+            Instantly maps symbols, functions, methods, structs, and interfaces across multiple files and packages. Automatically detects downstream callers, dependencies, and type contracts.
+          </p>
+          <ul class="feature-list">
+            <li>Louvain modularity community detection</li>
+            <li>PageRank hub centrality ranking</li>
+            <li>SHA-256 incremental hash cache</li>
+          </ul>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-card">
+          <div class="feature-icon feature-icon-purple">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 15h-2v-2h2zm0-4h-2V7h2z"></path></svg>
+          </div>
+          <h3 class="feature-title">Bi-Temporal Agent Memory</h3>
+          <p class="feature-desc">
+            Separates raw observation logs (Episodes) from verified architectural conclusions (Memories). AI agents anchor bug fixes, runbooks, and design decisions directly to symbol keys.
+          </p>
+          <ul class="feature-list">
+            <li>Composite ranking: BM25 + Confidence + Recency</li>
+            <li>Automatic memory superseding & invalidation</li>
+            <li>Citations graph linking memories to proof logs</li>
+          </ul>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-card">
+          <div class="feature-icon feature-icon-green">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+          </div>
+          <h3 class="feature-title">Native Model Context Protocol (MCP)</h3>
+          <p class="feature-desc">
+            Zero friction connection with Claude Desktop, Cursor, Roo-Code, and Antigravity. Equipped with 12 atomic tools for real-time querying, observing, committing, and indexing.
+          </p>
+          <ul class="feature-list">
+            <li>100% compliant with standard MCP 1.5 specification</li>
+            <li>Stdio & SSE transport support</li>
+            <li>Isolated multi-dataset project namespaces</li>
+          </ul>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="feature-card">
+          <div class="feature-icon feature-icon-yellow">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+          </div>
+          <h3 class="feature-title">Ultra-Fast Local SQLite WAL</h3>
+          <p class="feature-desc">
+            Zero cloud subscriptions or external databases required. All data resides in a single, high-performance embedded SQLite database using Write-Ahead Logging for lightning-fast reads.
+          </p>
+          <ul class="feature-list">
+            <li>Single file portability (`~/.ogm/ogm.db`)</li>
+            <li>Zero memory leaks with parallel worker pooling</li>
+            <li>Full-text FTS5 BM25 search index</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Architecture & Problem vs Solution -->
+  <section class="compare-section" id="compare">
+    <div class="section-container">
+      <div class="section-badge">THE ARCHITECTURAL DIFFERENCE</div>
+      <h2 class="section-title">Why Vector RAG Alone Fails for Code</h2>
+      <p class="section-subtitle">Code is a deterministic graph of call hierarchies and exact contracts, not just loose text similarity.</p>
+
+      <div class="compare-table-wrapper">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Capability</th>
+              <th>Naive Prompting / Context Window</th>
+              <th>Vector Embeddings (Vector RAG)</th>
+              <th class="highlight-col">OGM-Slim Engine</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Cross-File Call Graph</strong></td>
+              <td class="bad">❌ Impossible (Token limits)</td>
+              <td class="poor">⚠️ Inaccurate text chunks</td>
+              <td class="good highlight-col">✅ Deterministic AST Call Hierarchy</td>
+            </tr>
+            <tr>
+              <td><strong>Memory Retention</strong></td>
+              <td class="bad">❌ Lost upon session close</td>
+              <td class="poor">⚠️ Loose similarity recall</td>
+              <td class="good highlight-col">✅ Bi-temporal Provenance + BM25</td>
+            </tr>
+            <tr>
+              <td><strong>Bug Regression Prevention</strong></td>
+              <td class="bad">❌ AI repeats same mistakes</td>
+              <td class="bad">❌ No structured conclusion</td>
+              <td class="good highlight-col">✅ Anchored Memories to Symbol Keys</td>
+            </tr>
+            <tr>
+              <td><strong>Storage & Setup</strong></td>
+              <td class="neutral">None</td>
+              <td class="bad">❌ Heavy external cloud/vector DB</td>
+              <td class="good highlight-col">✅ 100% Local SQLite WAL (&lt;5ms)</td>
+            </tr>
+            <tr>
+              <td><strong>Integration Protocol</strong></td>
+              <td class="neutral">Manual Copy-Paste</td>
+              <td class="poor">⚠️ Custom API wrappers</td>
+              <td class="good highlight-col">✅ Standard MCP 1.5 Protocol (12 Tools)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- MCP Tools Section -->
+  <section class="mcp-section" id="mcp">
+    <div class="section-container">
+      <div class="section-badge">12 ATOMIC MCP TOOLS</div>
+      <h2 class="section-title">Seamlessly Integrated into Your AI Agent</h2>
+      <p class="section-subtitle">Claude and Cursor automatically invoke these tools to navigate codebases and record operational memories.</p>
+
+      <div class="mcp-tools-grid">
+        <div class="mcp-tool-pill">
+          <code>codebase_index</code>
+          <span>Index local directory with AST parser</span>
+        </div>
+        <div class="mcp-tool-pill">
+          <code>codebase_search</code>
+          <span>Search symbols by name, file, or kind</span>
+        </div>
+        <div class="mcp-tool-pill">
+          <code>codebase_get_callees</code>
+          <span>Inspect downstream caller/callee relations</span>
+        </div>
+        <div class="mcp-tool-pill">
+          <code>codebase_symbol_info</code>
+          <span>Get signature, contract, & docstrings</span>
+        </div>
+        <div class="mcp-tool-pill">
+          <code>memory_observe</code>
+          <span>Record immutable raw observation episode</span>
+        </div>
+        <div class="mcp-tool-pill">
+          <code>memory_commit</code>
+          <span>Commit structured durable solution memory</span>
+        </div>
+        <div class="mcp-tool-pill">
+          <code>memory_recall</code>
+          <span>FTS5 hybrid search across agent memory</span>
+        </div>
+        <div class="mcp-tool-pill">
+          <code>memory_inspect</code>
+          <span>Get full provenance trace & citations</span>
+        </div>
+        <div class="mcp-tool-pill">
+          <code>memory_invalidate</code>
+          <span>Archive or supersede outdated memory</span>
+        </div>
+        <div class="mcp-tool-pill">
+          <code>dataset_list</code>
+          <span>List isolated codebase workspaces</span>
+        </div>
+        <div class="mcp-tool-pill">
+          <code>dataset_stats</code>
+          <span>Get symbol, relation, and cluster counts</span>
+        </div>
+        <div class="mcp-tool-pill">
+          <code>dataset_delete</code>
+          <span>Cascade purge codebase dataset</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quickstart / Code Showcase Section -->
+  <section class="quickstart-section" id="quickstart">
+    <div class="section-container">
+      <div class="section-badge">QUICKSTART</div>
+      <h2 class="section-title">Get Running in Under 60 Seconds</h2>
+      <p class="section-subtitle">Choose your preferred setup: Claude Desktop, Cursor, CLI, or TypeScript Library.</p>
+
+      <div class="code-tabs-box">
+        <div class="code-tabs-header">
+          <button class="code-tab active" onclick="switchCodeTab('claude', this)">Claude Desktop</button>
+          <button class="code-tab" onclick="switchCodeTab('cursor', this)">Cursor / Windsurf</button>
+          <button class="code-tab" onclick="switchCodeTab('cli', this)">CLI & Daemon</button>
+          <button class="code-tab" onclick="switchCodeTab('sdk', this)">TypeScript SDK</button>
+        </div>
+        
+        <!-- Tab Content 1: Claude Desktop -->
+        <div class="code-tab-content active" id="tabContent_claude">
+          <div class="code-snippet-title">claude_desktop_config.json</div>
+          <pre class="code-block"><code>{
+  "mcpServers": {
+    "ogm-slim": {
+      "command": "npx",
+      "args": ["-y", "ogm-slim", "mcp"]
+    }
+  }
+}</code></pre>
+        </div>
+
+        <!-- Tab Content 2: Cursor -->
+        <div class="code-tab-content" id="tabContent_cursor">
+          <div class="code-snippet-title">Cursor &bull; Settings &gt; Features &gt; MCP Servers</div>
+          <pre class="code-block"><code>Name: ogm-slim
+Type: command
+Command: npx -y ogm-slim mcp</code></pre>
+        </div>
+
+        <!-- Tab Content 3: CLI -->
+        <div class="code-tab-content" id="tabContent_cli">
+          <div class="code-snippet-title">Terminal</div>
+          <pre class="code-block"><code># 1. Index your current project codebase
+ogm-slim index . --project my-app
+
+# 2. Launch the visualizer dashboard & REST API
+ogm-slim serve --port 8765
+
+# 3. Open browser at http://localhost:8765/admin</code></pre>
+        </div>
+
+        <!-- Tab Content 4: SDK -->
+        <div class="code-tab-content" id="tabContent_sdk">
+          <div class="code-snippet-title">app.ts</div>
+          <pre class="code-block"><code>import { indexCodebaseDirectory, recallMemories, commitMemory } from 'ogm-slim';
+
+// Index codebase into knowledge graph
+await indexCodebaseDirectory('./src', 'my-project');
+
+// Recall relevant memories with hybrid ranking
+const results = await recallMemories('WASM lifecycle', 'my-project');
+console.log(results);</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Banner Section -->
+  <section class="cta-banner-section">
+    <div class="cta-banner-container">
+      <h2 class="cta-banner-title">Supercharge Your AI Coding Agent Today</h2>
+      <p class="cta-banner-subtitle">Free & Open Source under the MIT License. Zero vendor lock-in.</p>
+      <div class="cta-banner-actions">
+        <a href="https://github.com/ardiannurcahya/ogm-slim" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          <span>Star & Fork on GitHub</span>
+        </a>
+        <a href="https://www.npmjs.com/package/ogm-slim" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-lg">
+          <span>View on NPM</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <div class="brand-logo">
+          <span class="brand-badge">OGM</span>
+          <span class="brand-title">Slim</span>
+        </div>
+        <p class="footer-tagline">Persistent memory & knowledge graph for AI coding agents.</p>
+      </div>
+
+      <div class="footer-links-group">
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a href="#features">Features</a>
+          <a href="#architecture">Architecture</a>
+          <a href="#mcp">MCP Tools</a>
+          <a href="#quickstart">Quickstart</a>
+        </div>
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <a href="https://github.com/ardiannurcahya/ogm-slim" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
+          <a href="https://www.npmjs.com/package/ogm-slim" target="_blank" rel="noopener noreferrer">NPM Package</a>
+          <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener noreferrer">MCP Documentation</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 OGM-Slim. Released under the MIT License.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

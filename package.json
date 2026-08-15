@@ -36,7 +36,7 @@
     "build": "tsup src/cli.ts src/index.ts --format esm,cjs --dts --clean",
     "start": "node dist/cli.js serve",
     "mcp": "tsx src/cli.ts mcp",
-    "test": "tsx --test tests/**/*.test.ts"
+    "test": "tsx --test tests/*.test.ts"
   },
   "keywords": [
     "mcp",
