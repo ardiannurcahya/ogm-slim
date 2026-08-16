@@ -15,6 +15,10 @@
 
 </div>
 
+<p align="center">
+  <img src="assets/ui-preview.jpg" alt="OGM-Slim Interactive Codebase Graph & Inspector UI Preview" width="100%" style="border-radius: 10px; border: 1px solid #1e293b; margin: 1rem 0;" />
+</p>
+
 ---
 
 ## 📖 Overview
