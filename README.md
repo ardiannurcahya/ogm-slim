@@ -16,7 +16,7 @@
 </div>
 
 <p align="center">
-  <img src="assets/ui-preview.jpg" alt="OGM-Slim Interactive Codebase Graph & Inspector UI Preview" width="100%" style="border-radius: 10px; border: 1px solid #1e293b; margin: 1rem 0;" />
+  <img src="assets/codebase-graph-preview.jpg" alt="OGM-Slim Interactive Codebase Graph & Inspector UI Preview" width="100%" style="border-radius: 10px; border: 1px solid #1e293b; margin: 1rem 0;" />
 </p>
 
 ---
@@ -44,6 +44,9 @@
 - 🖥️ **Interactive Web Visualizer**:
   - **🌳 Codebase Graph View**: Call hierarchy, community clusters, signatures, and blast radius.
   - **🧠 Agent Memory Graph View**: Durable memories, provenance citation edges, and raw observation evidence panels.
+  <p align="center">
+    <img src="assets/memory-graph-preview.jpg" alt="OGM-Slim Agent Memory Graph & Provenance Citation UI" width="100%" style="border-radius: 10px; border: 1px solid #1e293b; margin: 0.75rem 0;" />
+  </p>
 - 🔌 **Official Model Context Protocol (12 Tools)**: Standard MCP 1.5 compliance for Claude Desktop, Cursor, Roo-Code, and Antigravity over stdio or HTTP.
 - 📱 **Fully Responsive UI**: Optimized for Mobile, Tablet, and Desktop with clean edge-chevron sidebar handles.
 
