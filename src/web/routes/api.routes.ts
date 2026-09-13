@@ -80,7 +80,12 @@ export function registerApiRoutes(
     return c.json({ success: true });
   });
 
-  // Admin Web UI
+  // Admin Web UI & Dashboard
+  app.get('/', (c) => {
+    const projectId = c.req.query('project') || config.auth.default_project_id;
+    return c.html(renderGraphPage(projectId, !!config.auth.enabled));
+  });
+
   app.get('/admin', (c) => {
     const projectId = c.req.query('project') || config.auth.default_project_id;
     return c.html(renderGraphPage(projectId, !!config.auth.enabled));

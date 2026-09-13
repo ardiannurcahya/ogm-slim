@@ -62,4 +62,18 @@ describe('OGM-Slim Graph Algorithms (Louvain & PageRank)', () => {
 
     assert.ok(hubScore > leafScore, 'Hub node should have strictly higher PageRank than leaf nodes');
   });
+
+  test('PageRank should conserve total probability mass to ~1.0 with sink nodes', () => {
+    const nodes = ['main', 'parse', 'validate', 'helper'];
+    const adj = new Map<string, string[]>();
+    adj.set('main', ['parse', 'validate']);
+    adj.set('parse', ['helper']);
+    adj.set('validate', []);
+    adj.set('helper', []);
+
+    const pr = computePageRank(nodes, adj);
+    let sum = 0;
+    pr.forEach((score) => (sum += score));
+    assert.ok(Math.abs(sum - 1.0) < 0.01, `Total PageRank score (${sum}) should sum to ~1.0`);
+  });
 });

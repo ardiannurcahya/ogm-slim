@@ -25,7 +25,19 @@ export function computePageRank(
 
   for (let it = 0; it < iterations; it++) {
     const nextPr = new Map<string, number>();
-    nodeKeys.forEach((k) => nextPr.set(k, baseScore));
+
+    // Calculate lost mass from dangling nodes (nodes without outgoing edges)
+    let sinkMass = 0;
+    for (const key of nodeKeys) {
+      const neighbors = adj.get(key) || [];
+      if (neighbors.length === 0) {
+        sinkMass += (pr.get(key) || 0) * damping;
+      }
+    }
+    const sinkShare = sinkMass / n;
+    const baseWithSink = baseScore + sinkShare;
+
+    nodeKeys.forEach((k) => nextPr.set(k, baseWithSink));
 
     for (const key of nodeKeys) {
       const neighbors = adj.get(key) || [];
