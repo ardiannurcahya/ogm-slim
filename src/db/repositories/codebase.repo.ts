@@ -96,6 +96,9 @@ export class CodebaseRepository {
     if (!ds) return false;
 
     const tx = this.db.transaction(() => {
+      try {
+        this.db.prepare('DELETE FROM fts_symbols WHERE project_id = ? AND dataset_id = ?').run(projectId, ds.id);
+      } catch {}
       this.db.prepare('DELETE FROM symbol_edges WHERE project_id = ? AND dataset_id = ?').run(projectId, ds.id);
       this.db.prepare('DELETE FROM symbols WHERE project_id = ? AND dataset_id = ?').run(projectId, ds.id);
       this.db.prepare('DELETE FROM codebase_files WHERE project_id = ? AND dataset_id = ?').run(projectId, ds.id);
@@ -125,7 +128,7 @@ export class CodebaseRepository {
         .prepare('DELETE FROM symbol_edges WHERE project_id = ? AND dataset_id = ?')
         .run(projectId, cleanDatasetId);
       try {
-        this.db.prepare('DELETE FROM fts_symbols WHERE project_id = ?').run(projectId);
+        this.db.prepare('DELETE FROM fts_symbols WHERE project_id = ? AND dataset_id = ?').run(projectId, cleanDatasetId);
       } catch {}
 
       // Upsert symbols with dataset_id
@@ -150,6 +153,14 @@ export class CodebaseRepository {
           updated_at = datetime('now')
       `);
 
+      let ftsStmt: Database.Statement | null = null;
+      try {
+        ftsStmt = this.db.prepare(`
+          INSERT INTO fts_symbols (symbol_key, project_id, dataset_id, name, file_path, signature, docstring)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `);
+      } catch {}
+
       for (const s of symbols) {
         symStmt.run(
           s.key,
@@ -168,6 +179,20 @@ export class CodebaseRepository {
           s.pagerank || 0.0,
           s.community_id || 0
         );
+
+        if (ftsStmt) {
+          try {
+            ftsStmt.run(
+              s.key,
+              projectId,
+              cleanDatasetId,
+              s.name,
+              s.file_path,
+              s.signature || '',
+              s.docstring || ''
+            );
+          } catch {}
+        }
       }
 
       // Upsert edges with dataset_id

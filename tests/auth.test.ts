@@ -121,4 +121,16 @@ describe('OGM-Slim Web Authentication & Memory Graph API', () => {
     assert.ok(graph.nodes.length >= 2);
     assert.ok(graph.edges.length >= 1);
   });
+
+  test('should render graph dashboard on root path /', async () => {
+    const config = getDefaultConfig();
+    config.auth.enabled = false;
+    config.auth.default_project_id = 'auth-proj';
+
+    const app = createWebServer(memoryService, codebaseService, config);
+    const res = await app.request('/');
+    assert.equal(res.status, 200);
+    const html = await res.text();
+    assert.ok(html.includes('OGM-Slim'));
+  });
 });

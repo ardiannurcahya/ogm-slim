@@ -9,6 +9,8 @@ import { GolangExtractor } from './extractors/golang.extractor.js';
 import { PythonExtractor } from './extractors/python.extractor.js';
 import { RustExtractor } from './extractors/rust.extractor.js';
 
+import { createRequire } from 'node:module';
+
 export interface ExtractedFile {
   filePath: string;
   relativePath: string;
@@ -39,14 +41,21 @@ export class AstExtractor {
     if (this.isInitialized) return;
     await Parser.init();
 
-    // Resolve tree-sitter-wasms directory
-    let wasmDir = path.resolve('node_modules/tree-sitter-wasms/out');
-    if (!fs.existsSync(wasmDir)) {
-      try {
-        const pkgPath = fileURLToPath(import.meta.url);
-        wasmDir = path.resolve(path.dirname(pkgPath), '../../node_modules/tree-sitter-wasms/out');
-      } catch {
-        // Fallback
+    // Resolve tree-sitter-wasms directory robustly
+    let wasmDir = '';
+    try {
+      const require = createRequire(import.meta.url);
+      const pkgJsonPath = require.resolve('tree-sitter-wasms/package.json');
+      wasmDir = path.join(path.dirname(pkgJsonPath), 'out');
+    } catch {
+      wasmDir = path.resolve('node_modules/tree-sitter-wasms/out');
+      if (!fs.existsSync(wasmDir)) {
+        try {
+          const pkgPath = fileURLToPath(import.meta.url);
+          wasmDir = path.resolve(path.dirname(pkgPath), '../../tree-sitter-wasms/out');
+        } catch {
+          // Fallback
+        }
       }
     }
 
