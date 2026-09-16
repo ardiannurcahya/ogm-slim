@@ -60,7 +60,12 @@ program
     if (config.codebase.auto_index) {
       try {
         console.log(`[OGM-Slim] ⚡ Auto-indexing repository at ${process.cwd()} into dataset "${dsName}"...`);
-        const stats = await codebaseService.indexDirectory(process.cwd(), config.auth.default_project_id, dsName);
+        const stats = await codebaseService.indexDirectory(
+          process.cwd(),
+          config.auth.default_project_id,
+          dsName,
+          config.codebase.exclude_patterns
+        );
         console.log(
           `[OGM-Slim] ✅ Indexed dataset "${stats.datasetName}" (${stats.filesIndexed} files, ${stats.symbolsCount} symbols, ${stats.edgesCount} relations) in ${stats.durationMs}ms.`
         );
@@ -84,7 +89,12 @@ program
             if (debounceTimer) clearTimeout(debounceTimer);
             debounceTimer = setTimeout(async () => {
               try {
-                const reStats = await codebaseService.indexDirectory(process.cwd(), config.auth.default_project_id, dsName);
+                const reStats = await codebaseService.indexDirectory(
+                  process.cwd(),
+                  config.auth.default_project_id,
+                  dsName,
+                  config.codebase.exclude_patterns
+                );
                 console.log(`[OGM-Slim] 🔄 Re-indexed on file change (${fn}): ${reStats.symbolsCount} symbols in ${reStats.durationMs}ms`);
               } catch (e) {
                 console.warn('[OGM-Slim] Watch re-index error:', e);
@@ -145,7 +155,7 @@ program
     const codebaseService = new CodebaseService(codebaseRepo);
 
     console.log(`[OGM-Slim] 🔍 Scanning and indexing ${dirPath} into dataset "${options.dataset}"...`);
-    const stats = await codebaseService.indexDirectory(dirPath, projectId, options.dataset);
+    const stats = await codebaseService.indexDirectory(dirPath, projectId, options.dataset, config.codebase.exclude_patterns);
     console.log(
       `[OGM-Slim] ✅ Done! Indexed dataset "${stats.datasetName}" (${stats.filesIndexed} files, ${stats.symbolsCount} symbols, ${stats.edgesCount} call edges) in ${stats.durationMs}ms.`
     );
