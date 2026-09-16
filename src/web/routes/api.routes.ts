@@ -44,7 +44,7 @@ export function registerApiRoutes(
 ): void {
   // System Health (Public)
   app.get('/health', (c) => {
-    return c.json({ status: 'ok', service: 'ogm-slim', version: '1.0.0', auth_enabled: !!config.auth.enabled });
+    return c.json({ status: 'ok', service: 'ogm-slim', version: '1.1.0', auth_enabled: !!config.auth.enabled });
   });
 
   // Auth Status & Login / Logout
