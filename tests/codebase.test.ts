@@ -116,4 +116,51 @@ describe('OGM-Slim Codebase AST & Graph Operations', () => {
     const feGraph = codebaseService.getGraphData('code-proj', 'frontend-app');
     assert.equal(feGraph.nodes.length, 0);
   });
+
+  test('should automatically exclude .venv, venv, __pycache__, and target folders during indexing', async () => {
+    const pyDir = path.join(tempDir, 'python-project');
+    const venvDir = path.join(pyDir, '.venv', 'lib');
+    const venv2Dir = path.join(pyDir, 'venv', 'lib');
+    const pycacheDir = path.join(pyDir, '__pycache__');
+    const targetDir = path.join(pyDir, 'target', 'debug');
+
+    fs.mkdirSync(pyDir, { recursive: true });
+    fs.mkdirSync(venvDir, { recursive: true });
+    fs.mkdirSync(venv2Dir, { recursive: true });
+    fs.mkdirSync(pycacheDir, { recursive: true });
+    fs.mkdirSync(targetDir, { recursive: true });
+
+    // Legitimate project source code (including files whose names contain "env", "target", "build")
+    fs.writeFileSync(path.join(pyDir, 'main.py'), 'def calculate_metric():\n    return 42\n');
+    fs.writeFileSync(path.join(pyDir, 'environment.ts'), 'export function getEnvironmentConfig(): string { return "prod"; }\n');
+    fs.writeFileSync(path.join(pyDir, 'target_service.ts'), 'export function executeTargeting(): boolean { return true; }\n');
+    fs.writeFileSync(path.join(pyDir, 'env.ts'), 'export function getEnvPort(): number { return 3000; }\n');
+
+    // Virtualenv, cache, and target files that should be excluded
+    fs.writeFileSync(path.join(venvDir, 'pip_dep.py'), 'def dependency_lib_fn():\n    pass\n');
+    fs.writeFileSync(path.join(venv2Dir, 'site_pkg.py'), 'def site_packages_fn():\n    pass\n');
+    fs.writeFileSync(path.join(pycacheDir, 'main.cpython-311.py'), 'def cached_bytecode_fn():\n    pass\n');
+    fs.writeFileSync(path.join(targetDir, 'build_artifact.rs'), 'fn target_build_fn() {}\n');
+
+    const stats = await codebaseService.indexDirectory(pyDir, 'code-proj', 'python-project');
+
+    // 4 legitimate files: main.py, environment.ts, target_service.ts, env.ts
+    assert.equal(stats.filesIndexed, 4);
+
+    const projectSymbols = codebaseService.findSymbols('code-proj', 'python-project');
+    assert.ok(projectSymbols.some((s) => s.name === 'calculate_metric'));
+    assert.ok(projectSymbols.some((s) => s.name === 'getEnvironmentConfig'));
+    assert.ok(projectSymbols.some((s) => s.name === 'executeTargeting'));
+    assert.ok(projectSymbols.some((s) => s.name === 'getEnvPort'));
+
+    // Excluded directory symbols must NOT exist
+    const venvSymbols = codebaseService.findSymbols('code-proj', 'python-project', 'dependency_lib_fn');
+    assert.equal(venvSymbols.length, 0);
+
+    const pycacheSymbols = codebaseService.findSymbols('code-proj', 'python-project', 'cached_bytecode_fn');
+    assert.equal(pycacheSymbols.length, 0);
+
+    const targetSymbols = codebaseService.findSymbols('code-proj', 'python-project', 'target_build_fn');
+    assert.equal(targetSymbols.length, 0);
+  });
 });

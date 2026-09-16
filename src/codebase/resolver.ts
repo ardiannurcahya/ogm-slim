@@ -30,7 +30,30 @@ export class CodebaseIndexer {
     projectId: string = 'default',
     datasetId: string = 'default',
     datasetName: string = 'default',
-    ignorePatterns: string[] = ['node_modules', '.git', 'dist', 'build', '.next', 'coverage', '.cache', 'generated']
+    ignorePatterns: string[] = [
+      'node_modules',
+      '.git',
+      'dist',
+      'build',
+      '.next',
+      '.nuxt',
+      '.output',
+      '.svelte-kit',
+      'coverage',
+      '.cache',
+      '.turbo',
+      'generated',
+      '.venv',
+      'venv',
+      'env',
+      '.env',
+      '__pycache__',
+      '.pytest_cache',
+      '.mypy_cache',
+      '.tox',
+      '.ruff_cache',
+      'target',
+    ]
   ): Promise<{
     symbols: CodeSymbol[];
     edges: GraphEdge[];
@@ -155,9 +178,29 @@ export class CodebaseIndexer {
 
     const list = fs.readdirSync(dir, { withFileTypes: true });
     for (const item of list) {
-      if (ignorePatterns.some((pattern) => item.name === pattern || item.name.includes(pattern))) {
+      const isIgnored = ignorePatterns.some((pattern) => {
+        // Handle file extension wildcards like *.min.js or **/*.min.js
+        if (pattern.includes('*.')) {
+          const suffix = pattern.substring(pattern.indexOf('*.') + 1);
+          return item.name.endsWith(suffix);
+        }
+
+        const cleanPattern = pattern
+          .replace(/^\*+\/?|\/?\*+$/g, '')
+          .replace(/\*\*/g, '')
+          .replace(/^\/+/g, '')
+          .replace(/\/+$/g, '');
+
+        if (!cleanPattern) return false;
+
+        // Exact match on folder name or filename
+        return item.name === cleanPattern;
+      });
+
+      if (isIgnored) {
         continue;
       }
+
       const fullPath = path.join(dir, item.name);
       if (item.isDirectory()) {
         results.push(...this.walkFiles(fullPath, ignorePatterns));
