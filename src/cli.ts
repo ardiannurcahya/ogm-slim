@@ -19,7 +19,7 @@ const program = new Command();
 program
   .name('ogm-slim')
   .description('OpenGraphMemory Slim - Persistent Agent Memory & Codebase Knowledge Graph')
-  .version('1.0.0');
+  .version('1.1.0');
 
 // 1. Serve Command
 program
